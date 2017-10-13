@@ -1,0 +1,8 @@
+﻿<Application
+    x:Class="MyScript.IInk.Demo.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyScript.IInk.Demo"
+    RequestedTheme="Light">
+
+</Application>

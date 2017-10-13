@@ -1,0 +1,43 @@
+﻿<Page
+    x:Class="MyScript.IInk.GetStarted.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyScript.IInk"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:Uc="using:MyScript.IInk.UIReferenceImplementation.UserControls"
+    mc:Ignorable="d">
+    
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="auto"></RowDefinition>
+      <RowDefinition Height="*"></RowDefinition>
+    </Grid.RowDefinitions>
+    <CommandBar>            
+            <AppBarButton Icon="Undo" Label="Undo" Click="AppBar_UndoButton_Click"/>
+            <AppBarButton Icon="Redo" Label="Redo" Click="AppBar_RedoButton_Click"/>
+            <AppBarButton Icon="Delete" Label="Clear" Click="AppBar_ClearButton_Click"/>
+            <AppBarButton Label="Convert" Click="AppBar_ConvertButton_Click">
+                <TextBlock HorizontalAlignment="Center" Text="Convert" />
+            </AppBarButton>
+            <CommandBar.Content>
+                <TextBlock x:Name="Title" Margin="12,14" FontFamily="bold" FontSize="16"/>
+            </CommandBar.Content>
+        </CommandBar>
+
+    <Uc:EditorUserControl Grid.Row="1"  x:Name="UcEditor"></Uc:EditorUserControl>
+      
+    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8">
+      <ToggleButton Margin="2" x:Name="editToggleButton" Click="AppBar_EditButton_Click">
+        <TextBlock HorizontalAlignment="Center" Text="Pen" />
+      </ToggleButton>
+      <ToggleButton Margin="2" x:Name="touchPointerToggleButton" Click="AppBar_TouchPointerButton_Click">
+        <TextBlock HorizontalAlignment="Center" Text="Touch" />
+      </ToggleButton>
+      <ToggleButton Margin="2" x:Name="autoToggleButton"  Click="AppBar_AutoButton_Click">
+        <TextBlock HorizontalAlignment="Center" Text="Auto" />
+      </ToggleButton>
+    </StackPanel>
+
+  </Grid>
+</Page>

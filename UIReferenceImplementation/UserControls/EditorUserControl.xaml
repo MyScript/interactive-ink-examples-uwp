@@ -1,0 +1,33 @@
+﻿<UserControl
+    x:Class="MyScript.IInk.UIReferenceImplementation.UserControls.EditorUserControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyScript.IInk.UIReferenceImplementation.UserControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:Win2Dcanvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    >
+  <Grid>
+         <Win2Dcanvas:CanvasVirtualControl Name="backgroundCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  
+                                          RegionsInvalidated="Canvas_OnRegionsInvalidated"
+                                          SizeChanged="Canvas_SizeChanged"/>
+        <Win2Dcanvas:CanvasVirtualControl Name="modelCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  
+                                          RegionsInvalidated="Canvas_OnRegionsInvalidated"
+                                          SizeChanged="Canvas_SizeChanged"/>
+        <Win2Dcanvas:CanvasVirtualControl Name="tempCanvas"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                                          RegionsInvalidated="Canvas_OnRegionsInvalidated"
+                                          SizeChanged="Canvas_SizeChanged"/>
+        <Win2Dcanvas:CanvasVirtualControl  Name="captureCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                                           RegionsInvalidated="Canvas_OnRegionsInvalidated"
+                                           SizeChanged="Canvas_SizeChanged"
+                                           PointerCanceled="Capture_PointerCanceled"
+                                           PointerCaptureLost="Capture_PointerLost"
+                                           PointerReleased="Capture_PointerReleased"
+                                           PointerExited="Capture_PointerExited"
+                                           PointerMoved="Capture_PointerMoved"
+                                           PointerPressed="Capture_PointerPressed"
+                                           PointerWheelChanged="Capture_PointerWheelChanged"
+                                           />
+    </Grid>
+</UserControl>
