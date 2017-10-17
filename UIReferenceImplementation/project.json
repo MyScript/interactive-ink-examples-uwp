@@ -1,7 +1,7 @@
 ﻿{
   "dependencies": {
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.2.2",
-    "MyScript.InteractiveInk.Uwp": "1.0.0-rc3",
+    "MyScript.InteractiveInk.Uwp": "1.0.0",
     "Win2D.uwp": "1.21.0"
   },
   "frameworks": {
