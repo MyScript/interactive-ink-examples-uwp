@@ -4,6 +4,7 @@ using MyScript.IInk.UIReferenceImplementation.UserControls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Windows.Storage;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -199,38 +200,46 @@ namespace MyScript.IInk.Demo
 
         private async void AppBar_OpenPackageButton_Click(object sender, RoutedEventArgs e)
         {
-            string filePath = null;
-            string fileName = null;
+            List<string> files = new List<string>();
 
-            // Show open dialog
+            // List iink files inside LocalFolders
+            var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
+            var items = await localFolder.GetItemsAsync();
+            foreach (var item in items)
             {
-                var picker = new Windows.Storage.Pickers.FileOpenPicker();
-                picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
-                picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
-                picker.FileTypeFilter.Add(".iink");
-                picker.FileTypeFilter.Add("*");
-
-                Windows.Storage.StorageFile file = await picker.PickSingleFileAsync();
-                if (file != null)
-                {
-                    filePath = file.Path;
-                    fileName = file.Name;
-                }
+                if(item.IsOfType(StorageItemTypes.File) && item.Path.EndsWith(".iink"))
+                    files.Add(item.Name.ToString());
             }
+            if (files.Count == 0)
+                return;
 
-            if (!string.IsNullOrEmpty(filePath))
+            // Display file list
+            ListBox fileList = new ListBox
             {
-                // Reset viewing parameters
-                UcEditor.ResetView(false);
+                ItemsSource = files,
+                SelectedIndex = 0
+            };
+            ContentDialog fileNameDialog = new ContentDialog
+            {
+                Title = "Select Package Name",
+                Content = fileList,
+                IsSecondaryButtonEnabled = true,
+                PrimaryButtonText = "Ok",
+                SecondaryButtonText = "Cancel",
+            };
+            if (await fileNameDialog.ShowAsync() == ContentDialogResult.Secondary)
+                return;
 
-                // Open package and select first part
-                _editor.Part = null;
-                var package = _engine.OpenPackage(filePath);
-                var part = package.GetPart(0);
-                _editor.Part = part;
-                _packageName = fileName;
-                Title.Text = _packageName + " - " + part.Type;
-            }
+            var fileName = fileList.SelectedValue.ToString();
+            var filePath = System.IO.Path.Combine(localFolder.Path.ToString(), fileName);
+
+            // Open package and select first part
+            _editor.Part = null;
+            var package = _engine.OpenPackage(filePath);
+            var part = package.GetPart(0);
+            _editor.Part = part;
+            _packageName = fileName;
+            Title.Text = _packageName + " - " + part.Type;
         }
 
         private void AppBar_SavePackageButton_Click(object sender, RoutedEventArgs e)
@@ -245,34 +254,70 @@ namespace MyScript.IInk.Demo
 
         private async void AppBar_SaveAsButton_Click(object sender, RoutedEventArgs e)
         {
+            var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
+
+            // Show file name input dialog
+            TextBox inputTextBox = new TextBox
+            {
+                AcceptsReturn = false,
+                Height = 32
+            };
+            ContentDialog fileNameDialog = new ContentDialog
+            {
+                Title = "Enter New Package Name",
+                Content = inputTextBox,
+                IsSecondaryButtonEnabled = true,
+                PrimaryButtonText = "Ok",
+                SecondaryButtonText = "Cancel",
+            };
+
+            if (await fileNameDialog.ShowAsync() == ContentDialogResult.Secondary)
+                return;
+
+            var fileName = inputTextBox.Text;
+            if (fileName == null || fileName == "")
+                return;
+
+            // Add iink extension if needed
+            if (!fileName.EndsWith(".iink"))
+                fileName = fileName + ".iink";
+
+            // Display overwrite dialog (if needed)
             string filePath = null;
-            string fileName = null;
-
-            // Show save dialog
+            var item = await localFolder.TryGetItemAsync(fileName);
+            if (item != null)
             {
-                var picker = new Windows.Storage.Pickers.FileSavePicker();
-                picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
-                picker.FileTypeChoices.Add("Interactive Ink Document", new List<string>() { ".iink" });
-
-                Windows.Storage.StorageFile file = await picker.PickSaveFileAsync();
-                if (file != null)
+                ContentDialog overwriteDialog = new ContentDialog
                 {
-                    filePath = file.Path;
-                    fileName = file.Name;
-                }
-            }
+                    Title = "File Already Exists",
+                    Content = "A file with that name already exists, overwrite it?",
+                    PrimaryButtonText = "Cancel",
+                    SecondaryButtonText = "Overwrite"
+                };
 
-            if (!string.IsNullOrEmpty(filePath))
-            {
-                var part = _editor.Part;
-
-                if (part == null)
+                ContentDialogResult result = await overwriteDialog.ShowAsync();
+                if (result == ContentDialogResult.Primary)
                     return;
 
-                part.Package.SaveAs(filePath);
-                _packageName = fileName;
-                Title.Text = _packageName + " - " + part.Type;
+                filePath = item.Path.ToString();
             }
+            else
+            {
+                filePath = System.IO.Path.Combine(localFolder.Path.ToString(), fileName);
+            }
+
+            // Get current package
+            var part = _editor.Part;
+            if (part == null)
+                return;
+            var package = part.Package;
+
+            // Save Package with new name
+            package.SaveAs(filePath);
+
+            // Update internals
+            _packageName = fileName;
+            Title.Text = _packageName + " - " + part.Type;
         }
 
         private void UcEditor_RightTapped(object sender, Windows.UI.Xaml.Input.RightTappedRoutedEventArgs e)

@@ -153,7 +153,7 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         public void SetFillColor(Color color)
         {
-            _fillColor = Windows.UI.Color.FromArgb((byte)color.A, (byte)color.R, (byte)color.G, (byte)color.B); ;
+            _fillColor = Windows.UI.Color.FromArgb((byte)color.A, (byte)color.R, (byte)color.G, (byte)color.B);
         }
 
         public void SetFillRule(FillRule rule)
