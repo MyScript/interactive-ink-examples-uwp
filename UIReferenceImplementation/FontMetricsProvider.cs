@@ -1,4 +1,6 @@
-﻿using Microsoft.Graphics.Canvas;
+﻿// Copyright MyScript. All right reserved.
+
+using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using MyScript.IInk.Graphics;
 using MyScript.IInk.Text;

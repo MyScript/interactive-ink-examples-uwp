@@ -1,4 +1,6 @@
-﻿using MyScript.IInk.Graphics;
+﻿// Copyright MyScript. All right reserved.
+
+using MyScript.IInk.Graphics;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Windows.Foundation;
 using Windows.UI.Core;

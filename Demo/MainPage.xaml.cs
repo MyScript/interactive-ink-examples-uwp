@@ -1,4 +1,6 @@
-﻿using MyScript.IInk.UIReferenceImplementation.UserControls;
+﻿// Copyright MyScript. All right reserved.
+
+using MyScript.IInk.UIReferenceImplementation.UserControls;
 using System;
 using System.Collections.Generic;
 using System.Linq;

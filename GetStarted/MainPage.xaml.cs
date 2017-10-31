@@ -1,4 +1,6 @@
-﻿using MyScript.IInk.UIReferenceImplementation.UserControls;
+﻿// Copyright MyScript. All right reserved.
+
+using MyScript.IInk.UIReferenceImplementation.UserControls;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;

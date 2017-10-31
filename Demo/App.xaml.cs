@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright MyScript. All right reserved.
+
+using System;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.UI.Popups;

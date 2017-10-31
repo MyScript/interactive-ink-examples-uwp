@@ -1,4 +1,6 @@
-﻿using Windows.UI.Xaml;
+﻿// Copyright MyScript. All right reserved.
+
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Microsoft.Graphics.Canvas.UI.Xaml;
