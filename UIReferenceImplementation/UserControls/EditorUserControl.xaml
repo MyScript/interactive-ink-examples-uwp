@@ -9,25 +9,31 @@
     mc:Ignorable="d"
     >
   <Grid>
-         <Win2Dcanvas:CanvasVirtualControl Name="backgroundCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  
+        <Win2Dcanvas:CanvasVirtualControl x:Name="backgroundCanvas"
+                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                                           RegionsInvalidated="Canvas_OnRegionsInvalidated"
                                           SizeChanged="Canvas_SizeChanged"/>
-        <Win2Dcanvas:CanvasVirtualControl Name="modelCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  
+        <Win2Dcanvas:CanvasVirtualControl x:Name="modelCanvas"
+                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                                           RegionsInvalidated="Canvas_OnRegionsInvalidated"
                                           SizeChanged="Canvas_SizeChanged"/>
-        <Win2Dcanvas:CanvasVirtualControl Name="tempCanvas"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+        <Win2Dcanvas:CanvasVirtualControl x:Name="tempCanvas"
+                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                                           RegionsInvalidated="Canvas_OnRegionsInvalidated"
                                           SizeChanged="Canvas_SizeChanged"/>
-        <Win2Dcanvas:CanvasVirtualControl  Name="captureCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
-                                           RegionsInvalidated="Canvas_OnRegionsInvalidated"
-                                           SizeChanged="Canvas_SizeChanged"
-                                           PointerCanceled="Capture_PointerCanceled"
-                                           PointerCaptureLost="Capture_PointerLost"
-                                           PointerReleased="Capture_PointerReleased"
-                                           PointerExited="Capture_PointerExited"
-                                           PointerMoved="Capture_PointerMoved"
-                                           PointerPressed="Capture_PointerPressed"
-                                           PointerWheelChanged="Capture_PointerWheelChanged"
-                                           />
+        <Win2Dcanvas:CanvasVirtualControl x:Name="captureCanvas"
+                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                                          RegionsInvalidated="Canvas_OnRegionsInvalidated"
+                                          SizeChanged="Canvas_SizeChanged"
+                                          PointerCanceled="Capture_PointerCanceled"
+                                          PointerCaptureLost="Capture_PointerLost"
+                                          PointerReleased="Capture_PointerReleased"
+                                          PointerExited="Capture_PointerExited"
+                                          PointerMoved="Capture_PointerMoved"
+                                          PointerPressed="Capture_PointerPressed"
+                                          PointerWheelChanged="Capture_PointerWheelChanged"
+                                          Padding="0" />
+
+        <local:SmartGuideUserControl x:Name="smartGuide" Visibility="Collapsed" />
     </Grid>
 </UserControl>

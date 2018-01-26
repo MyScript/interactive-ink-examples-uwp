@@ -10,7 +10,8 @@ namespace MyScript.IInk.UIReferenceImplementation
 {
     public class Layer
     {
-        public LayerType type { get; private set; }
+        public LayerType Type { get; private set; }
+        public ImageLoader ImageLoader { get; set; }
 
         private CanvasVirtualControl _control;
         private IRenderTarget _target;
@@ -18,10 +19,10 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         public Layer(CanvasVirtualControl control, IRenderTarget target, LayerType type, Renderer renderer)
         {
-            this.type = type;
-            this._control = control;
-            this._target = target;
-            this._renderer = renderer;
+            Type = type;
+            _control = control;
+            _target = target;
+            _renderer = renderer;
         }
 
         public void Update()
@@ -38,7 +39,7 @@ namespace MyScript.IInk.UIReferenceImplementation
         {
             // Clamp region's coordinates into control's rect
             // (control.Invalidate may raise an exception)
-            Rect region = ClampRect(x, y, width, height);
+            var region = ClampRect(x, y, width, height);
 
             if (region.Width > 0 && region.Height > 0)
             {
@@ -61,39 +62,39 @@ namespace MyScript.IInk.UIReferenceImplementation
         {
             // Clamp region's coordinates into control's rect
             // (control.CreateDrawingSession may raise an exception)
-            Rect region = ClampRect(x, y, width, height);
+            var region = ClampRect(x, y, width, height);
             if (region.Width <= 0 || region.Height <= 0)
                 return;
 
             using (var session = _control.CreateDrawingSession(region))
             {
-                Canvas canvas = new Canvas(_target); //(imageLoader, dynamic_cast<myscript::iink::IRenderTarget*>(this->parentWidget()));
+                var canvas = new Canvas(session, _target, ImageLoader);
 
-                switch (type)
+                switch (Type)
                 {
                     case LayerType.BACKGROUND:
                         {
-                          Color white = new Color(0xffffffff);
-                          canvas.Begin(session, _control);
+                          var white = new Color(0xffffffff);
+                          canvas.Begin();
                           canvas.Clear(white);
                           _renderer.DrawBackground(x, y, width, height, canvas);
                           canvas.End();
                           break;
                         }
                     case LayerType.MODEL:
-                        canvas.Begin(session,_control);
+                        canvas.Begin();
                         _renderer.DrawModel(x, y, width, height, canvas);
                         canvas.End();
                         break;
 
                     case LayerType.TEMPORARY:
-                        canvas.Begin(session, _control);
+                        canvas.Begin();
                         _renderer.DrawTemporaryItems(x, y, width, height, canvas);
                         canvas.End();
                         break;
 
                     case LayerType.CAPTURE:
-                        canvas.Begin(session, _control);
+                        canvas.Begin();
                         _renderer.DrawCaptureStrokes(x, y, width, height, canvas);
                         canvas.End();
                         break;

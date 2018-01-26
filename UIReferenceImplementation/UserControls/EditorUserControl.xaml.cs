@@ -8,6 +8,7 @@ using Windows.UI.Core;
 using Windows.System;
 using Windows.Graphics.Display;
 using UIReferenceImplementation;
+using Windows.UI.Popups;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 namespace MyScript.IInk.UIReferenceImplementation.UserControls
@@ -19,11 +20,89 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         PEN = 2
     }
 
+    public class RendererListener : IRendererListener
+    {
+        private EditorUserControl _ucEditor;
+
+        public RendererListener(EditorUserControl ucEditor)
+        {
+            _ucEditor = ucEditor;
+        }
+
+        public void ViewTransformChanged(Renderer renderer)
+        {
+            if (_ucEditor.SmartGuide != null)
+            {
+                var dispatcher = _ucEditor.Dispatcher;
+                var task = dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { _ucEditor.SmartGuide.OnTransformChanged(); });
+            }
+        }
+    }
+
+    public class EditorListener : IEditorListener2
+    {
+        private EditorUserControl _ucEditor;
+
+        public EditorListener(EditorUserControl ucEditor)
+        {
+            _ucEditor = ucEditor;
+        }
+
+        public void PartChanged(Editor editor)
+        {
+            if (_ucEditor.SmartGuide != null)
+            {
+                var dispatcher = _ucEditor.Dispatcher;
+                var task = dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { _ucEditor.SmartGuide.OnPartChanged(); });
+            }
+        }
+
+        public void ContentChanged(Editor editor, string[] blockIds)
+        {
+            if (_ucEditor.SmartGuide != null)
+            {
+                var dispatcher = _ucEditor.Dispatcher;
+                var task = dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { _ucEditor.SmartGuide.OnContentChanged(blockIds); });
+            }
+        }
+
+        public void SelectionChanged(Editor editor, string[] blockIds)
+        {
+            if (_ucEditor.SmartGuide != null)
+            {
+                var dispatcher = _ucEditor.Dispatcher;
+                var task = dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { _ucEditor.SmartGuide.OnSelectionChanged(blockIds); });
+            }
+        }
+
+        public void ActiveBlockChanged(Editor editor, string blockId)
+        {
+            if (_ucEditor.SmartGuide != null)
+            {
+                var dispatcher = _ucEditor.Dispatcher;
+                var task = dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { _ucEditor.SmartGuide.OnActiveBlockChanged(blockId); });
+            }
+        }
+
+        public void OnError(Editor editor, string blockId, string message)
+        {
+            var dispatcher = _ucEditor.Dispatcher;
+            var task = dispatcher.RunAsync( CoreDispatcherPriority.Normal,
+                                            () =>
+                                            {
+                                                var dlg = new MessageDialog(message);
+                                                var dlgTask = dlg.ShowAsync();
+                                            });
+        }
+    }
+
+
     public sealed partial class EditorUserControl : UserControl, IRenderTarget
     {
         private Engine _engine;
         private Editor _editor;
         private Renderer _renderer;
+        private ImageLoader _loader;
 
         public Engine Engine
         {
@@ -39,21 +118,10 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             }
         }
 
-        public Editor Editor
-        {
-            get
-            {
-                return _editor;
-            }
-        }
-
-        public Renderer Renderer
-        {
-            get
-            {
-                return _renderer;
-            }
-        }
+        public Editor Editor => _editor;
+        public Renderer Renderer => _renderer;
+        public ImageLoader ImageLoader => _loader;
+        public SmartGuideUserControl SmartGuide => smartGuide;
 
         private Layer _backgroundLayer;
         private Layer _modelLayer;
@@ -68,7 +136,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         public EditorUserControl()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             InputMode = InputMode.PEN;
         }
 
@@ -78,8 +146,21 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         private void Initialize()
         {
-            var dpiX = DisplayInformation.GetForCurrentView().RawDpiX;
-            var dpiY = DisplayInformation.GetForCurrentView().RawDpiY;
+            var info = DisplayInformation.GetForCurrentView();
+            var dpiX = info.RawDpiX;
+            var dpiY = info.RawDpiY;
+            var scale = 1.0f;
+            
+            if (info.RawPixelsPerViewPixel > 0.0)
+                scale = (float)info.RawPixelsPerViewPixel;
+            else if (info.ResolutionScale != ResolutionScale.Invalid)
+                scale = (float)info.ResolutionScale / 100.0f;
+
+            if (scale > 0.0f)
+            {
+                dpiX /= scale;
+                dpiY /= scale;
+            }
 
             // RawDpi properties can return 0 when the monitor doesn't provide physical dimensions and when the user is
             // in a clone or duplicate multiple -monitor setup.
@@ -87,6 +168,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 dpiX = dpiY = 96;
 
             _renderer = _engine.CreateRenderer(dpiX, dpiY, this);
+            _renderer.AddListener(new RendererListener(this));
 
             _backgroundLayer = new Layer(backgroundCanvas, this, LayerType.BACKGROUND, _renderer);
             _modelLayer = new Layer(modelCanvas, this, LayerType.MODEL, _renderer);
@@ -96,11 +178,22 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             _editor = _engine.CreateEditor(_renderer);
             _editor.SetViewSize((int)ActualWidth, (int)ActualHeight);
             _editor.SetFontMetricsProvider(new FontMetricsProvider(dpiX, dpiY));
+            _editor.AddListener(new EditorListener(this));
+
+            smartGuide.Editor = _editor;
+
+            var tempFolder = _engine.Configuration.GetString("content-package.temp-folder");
+            _loader = new ImageLoader(_editor, tempFolder);
+
+            _backgroundLayer.ImageLoader = _loader;
+            _modelLayer.ImageLoader = _loader;
+            _captureLayer.ImageLoader = _loader;
+            _temporaryLayer.ImageLoader = _loader;
 
             float verticalMarginPX = 60;
             float horizontalMarginPX = 40;
-            float verticalMarginMM = 25.4f * verticalMarginPX / dpiY;
-            float horizontalMarginMM = 25.4f * horizontalMarginPX / dpiX;
+            var verticalMarginMM = 25.4f * verticalMarginPX / dpiY;
+            var horizontalMarginMM = 25.4f * horizontalMarginPX / dpiX;
             _engine.Configuration.SetNumber("text.margin.top", verticalMarginMM);
             _engine.Configuration.SetNumber("text.margin.left", horizontalMarginMM);
             _engine.Configuration.SetNumber("text.margin.right", horizontalMarginMM);
@@ -132,23 +225,21 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         /// <summary>Force ink layers to be redrawn according region</summary>
         public void Invalidate(Renderer renderer, int x, int y, int width, int height, LayerType layers)
         {
-            if (height >= 0)
-            {
-                if ((layers & LayerType.BACKGROUND) != 0)
-                    _backgroundLayer.Update(x, y, width, height);
-                if ((layers & LayerType.MODEL) != 0)
-                    _modelLayer.Update(x, y, width, height);
-                if ((layers & LayerType.TEMPORARY) != 0)
-                    _temporaryLayer.Update(x, y, width, height);
-                if ((layers & LayerType.CAPTURE) != 0)
-                    _captureLayer.Update(x, y, width, height);
-            }
+            if (height < 0)
+                return;
+            if ((layers & LayerType.BACKGROUND) != 0)
+                _backgroundLayer.Update(x, y, width, height);
+            if ((layers & LayerType.MODEL) != 0)
+                _modelLayer.Update(x, y, width, height);
+            if ((layers & LayerType.TEMPORARY) != 0)
+                _temporaryLayer.Update(x, y, width, height);
+            if ((layers & LayerType.CAPTURE) != 0)
+                _captureLayer.Update(x, y, width, height);
         }
 
         public void OnResize(int width, int height)
         {
-            if (_editor != null)
-                _editor.SetViewSize(width, height);
+            _editor?.SetViewSize(width, height);
         }
 
         /// <summary>Resize editor when one canvas size has been changed </summary>
@@ -169,10 +260,10 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             {
                 if (region.Width > 0 && region.Height > 0)
                 {
-                    int x = (int)System.Math.Floor(region.X);
-                    int y = (int)System.Math.Floor(region.Y);
-                    int width = (int)System.Math.Ceiling(region.X + region.Width) - x;
-                    int height = (int)System.Math.Ceiling(region.Y + region.Height) - y;
+                    var x = (int)System.Math.Floor(region.X);
+                    var y = (int)System.Math.Floor(region.Y);
+                    var width = (int)System.Math.Ceiling(region.X + region.Width) - x;
+                    var height = (int)System.Math.Ceiling(region.Y + region.Height) - y;
 
                     if (sender == captureCanvas)
                         _captureLayer.OnPaint(x, y, width, height);
@@ -232,7 +323,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             _editor.PointerDown((float)p.Position.X, (float)p.Position.Y, GetTimestamp(p), p.Properties.Pressure, pointerType, (int)e.Pointer.PointerId);
 
             // Capture the pointer to the target.
-            uiElement.CapturePointer(e.Pointer);
+            uiElement?.CapturePointer(e.Pointer);
 
             // Prevent most handlers along the event route from handling the same event again.
             e.Handled = true;
@@ -260,9 +351,9 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
             if (!_onScroll && (pointerType == PointerType.TOUCH))
             {
-                float deltaMin = 3.0f;
-                float deltaX = _lastPointerPosition.X - previousPosition.X;
-                float deltaY = _lastPointerPosition.Y - previousPosition.Y;
+                var deltaMin = 3.0f;
+                var deltaX = _lastPointerPosition.X - previousPosition.X;
+                var deltaY = _lastPointerPosition.Y - previousPosition.Y;
 
                 _onScroll = _editor.IsScrollAllowed() && ((System.Math.Abs(deltaX) > deltaMin) || (System.Math.Abs(deltaY) > deltaMin));
 
@@ -276,8 +367,8 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             if (_onScroll)
             {
                 // Scroll the view
-                float deltaX = _lastPointerPosition.X - previousPosition.X;
-                float deltaY = _lastPointerPosition.Y - previousPosition.Y;
+                var deltaX = _lastPointerPosition.X - previousPosition.X;
+                var deltaY = _lastPointerPosition.Y - previousPosition.Y;
                 Scroll(-deltaX, -deltaY);
             }
             else
@@ -310,8 +401,8 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             if (_onScroll)
             {
                 // Scroll the view
-                float deltaX = _lastPointerPosition.X - previousPosition.X;
-                float deltaY = _lastPointerPosition.Y - previousPosition.Y;
+                var deltaX = _lastPointerPosition.X - previousPosition.X;
+                var deltaY = _lastPointerPosition.Y - previousPosition.Y;
                 Scroll(-deltaX, -deltaY);
 
                 // Exiting scrolling mode
@@ -324,7 +415,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             }
 
             // Release the pointer captured from the target
-            uiElement.ReleasePointerCapture(e.Pointer);
+            uiElement?.ReleasePointerCapture(e.Pointer);
 
             // Prevent most handlers along the event route from handling the same event again.
             e.Handled = true;
@@ -332,9 +423,6 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         private void Capture_PointerCanceled(object sender, PointerRoutedEventArgs e)
         {
-            var uiElement = sender as UIElement;
-            var p = e.GetCurrentPoint(uiElement);
-
             // When using mouse consider left button only
             if (e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
             {
@@ -372,7 +460,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
             if (properties.IsHorizontalMouseWheel == false)
             {
-                int WHEEL_DELTA = 120;  // TODO : get from system ?
+                var WHEEL_DELTA = 120;  // TODO : get from system ?
 
                 var controlDown = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
                 var shiftDown = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Shif‌​t).HasFlag(CoreVirtualKeyStates.Down);
@@ -387,10 +475,10 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 }
                 else
                 {
-                    int SCROLL_SPEED = 10;
-                    float delta = (float)(-SCROLL_SPEED * wheelDelta);
-                    float deltaX = shiftDown ? delta : 0.0f;
-                    float deltaY = shiftDown ? 0.0f : delta;
+                    var SCROLL_SPEED = 10;
+                    var delta = (float)(-SCROLL_SPEED * wheelDelta);
+                    var deltaX = shiftDown ? delta : 0.0f;
+                    var deltaY = shiftDown ? 0.0f : delta;
 
                     Scroll(deltaX, deltaY);
                 }
@@ -403,7 +491,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         public void ResetView(bool forceInvalidate)
         {
             _renderer.ViewScale = 1;
-            _renderer.ViewOffset = new MyScript.IInk.Graphics.Point(0, 0);
+            _renderer.ViewOffset = new Graphics.Point(0, 0);
             
             if (forceInvalidate)
                 Invalidate(_renderer, LayerType.LayerType_ALL);
@@ -424,7 +512,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         private void Scroll(float deltaX, float deltaY)
         {
             var oldOffset = _renderer.ViewOffset;
-            var newOffset = new MyScript.IInk.Graphics.Point(oldOffset.X + deltaX, oldOffset.Y + deltaY);
+            var newOffset = new Graphics.Point(oldOffset.X + deltaX, oldOffset.Y + deltaY);
 
             _editor.ClampViewOffset(newOffset);
 

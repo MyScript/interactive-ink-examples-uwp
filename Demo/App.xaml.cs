@@ -12,35 +12,28 @@ namespace MyScript.IInk.Demo
 {
     sealed partial class App : Application
     {
-        private static Engine _engine;
-        public static Engine Engine
-        {
-            get
-            {
-                return _engine;
-            }
-        }
+        public static Engine Engine { get; private set; }
 
         public App()
         {
-            this.InitializeComponent();
-            this.Suspending += OnSuspending;
-            this.UnhandledException += OnUnhandledException;
+            InitializeComponent();
+            Suspending += OnSuspending;
+            UnhandledException += OnUnhandledException;
         }
 
-        private async void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        private static async void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             e.Handled = true;
             await ShowErrorDialog(e.Message);
         }
 
-        private async System.Threading.Tasks.Task<bool> ShowErrorDialog(string message)
+        private static async System.Threading.Tasks.Task<bool> ShowErrorDialog(string message)
         {
-            MessageDialog dialog = new MessageDialog("Error: " + message);
+            var dialog = new MessageDialog("Error: " + message);
 
-            dialog.Commands.Add(new UICommand("Abort", delegate (IUICommand command)
+            dialog.Commands.Add(new UICommand("Abort", delegate
             {
-                Application.Current.Exit();
+                Current.Exit();
             }));
 
             await dialog.ShowAsync();
@@ -49,12 +42,12 @@ namespace MyScript.IInk.Demo
 
         protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
-            Frame rootFrame = Window.Current.Content as Frame;
+            var rootFrame = Window.Current.Content as Frame;
 
             try
             {
                 // Initialize Interactive Ink runtime environment
-                _engine = MyScript.IInk.Engine.Create((byte[])(Array)MyScript.Certificate.MyCertificate.Bytes);
+                Engine = Engine.Create((byte[])(Array)Certificate.MyCertificate.Bytes);
             }
             catch (Exception err)
             {
@@ -66,16 +59,11 @@ namespace MyScript.IInk.Demo
                 rootFrame = new Frame();
 
                 rootFrame.NavigationFailed += OnNavigationFailed;
-
-                if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
-                {
-
-                }
-
+                
                 Window.Current.Content = rootFrame;
             }
 
-            if (e.PrelaunchActivated == false)
+            if (!e.PrelaunchActivated)
             {
                 if (rootFrame.Content == null)
                 {
@@ -86,12 +74,12 @@ namespace MyScript.IInk.Demo
             }
         }
 
-        void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
+        static void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
         {
             throw new Exception("Failed to load Page " + e.SourcePageType.FullName);
         }
 
-        private void OnSuspending(object sender, SuspendingEventArgs e)
+        private static void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
 

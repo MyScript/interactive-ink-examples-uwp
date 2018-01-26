@@ -10,11 +10,13 @@ namespace MyScript.IInk.UIReferenceImplementation
     {
         private CanvasPathBuilder _pathBuilder;
         private bool _isInFigure;
+        private bool _isConfigured;
 
         public Path(CanvasDevice device)
         {
             _pathBuilder = new CanvasPathBuilder(device);
             _isInFigure = false;
+            _isConfigured = false;
         }
 
         public uint UnsupportedOperations
@@ -24,9 +26,19 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         public void MoveTo(float x, float y)
         {
-            // Settings must be set from Canvas properties and before BeginFigure
-            _pathBuilder.SetSegmentOptions(CanvasFigureSegmentOptions.None);
-            _pathBuilder.SetFilledRegionDetermination(CanvasFilledRegionDetermination.Winding);
+            if (!_isConfigured)
+            {
+                // Settings must be set from Canvas properties and before BeginFigure
+                _pathBuilder.SetSegmentOptions(CanvasFigureSegmentOptions.None);
+                _pathBuilder.SetFilledRegionDetermination(CanvasFilledRegionDetermination.Winding);
+                _isConfigured = true;
+            }
+
+            if (_isInFigure)
+            {
+                _pathBuilder.EndFigure(CanvasFigureLoop.Open);
+            }
+
             _pathBuilder.BeginFigure(x, y);
             _isInFigure = true;
         }
@@ -38,17 +50,17 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         public void CurveTo(float x1, float y1, float x2, float y2, float x, float y)
         {
-            System.Numerics.Vector2 controlPoint1 = new System.Numerics.Vector2(x1, y1);
-            System.Numerics.Vector2 controlPoint2 = new System.Numerics.Vector2(x2, y2);
-            System.Numerics.Vector2 endPoint = new System.Numerics.Vector2(x, y);
+            var controlPoint1 = new System.Numerics.Vector2(x1, y1);
+            var controlPoint2 = new System.Numerics.Vector2(x2, y2);
+            var endPoint = new System.Numerics.Vector2(x, y);
 
             _pathBuilder.AddCubicBezier(controlPoint1, controlPoint2, endPoint);
         }
 
         public void QuadTo(float x1, float y1, float x, float y)
         {
-            System.Numerics.Vector2 controlPoint = new System.Numerics.Vector2(x1, y1);
-            System.Numerics.Vector2 endPoint = new System.Numerics.Vector2(x, y);
+            var controlPoint = new System.Numerics.Vector2(x1, y1);
+            var endPoint = new System.Numerics.Vector2(x, y);
 
             _pathBuilder.AddQuadraticBezier(controlPoint, endPoint);
         }

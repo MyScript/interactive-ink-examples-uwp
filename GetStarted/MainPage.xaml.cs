@@ -10,24 +10,18 @@ namespace MyScript.IInk.GetStarted
     public sealed partial class MainPage : Page
     {
         // Defines the type of content (possible values are: "Text Document", "Text", "Diagram", "Math", and "Drawing")
-        private const string PART_TYPE = "Text Document";
+        private const string PartType = "Text Document";
 
         private Engine _engine;
 
-        private Editor _editor
-        {
-            get
-            {
-                return UcEditor.Editor;
-            }
-        }
+        private Editor Editor => UcEditor.Editor;
 
         public MainPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
-            this.Loaded += UcEditor.UserControl_Loaded;
-            this.Loaded += Page_Loaded;
+            Loaded += UcEditor.UserControl_Loaded;
+            Loaded += Page_Loaded;
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
@@ -36,12 +30,12 @@ namespace MyScript.IInk.GetStarted
 
             // Folders "conf" and "resources" are currently parts of the layout
             // (for each conf/res file of the project => properties => "Build Action = content")
-            string[] confDirs = new string[1];
+            var confDirs = new string[1];
             confDirs[0] = "conf";
             _engine.Configuration.SetStringArray("configuration-manager.search-path", confDirs);
 
             var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
-            var tempFolder = System.IO.Path.Combine(localFolder.ToString(), "tmp");
+            var tempFolder = System.IO.Path.Combine(localFolder, "tmp");
             _engine.Configuration.SetString("content-package.temp-folder", tempFolder);
 
             // Initialize the editor with the engine
@@ -55,35 +49,36 @@ namespace MyScript.IInk.GetStarted
 
         private void AppBar_UndoButton_Click(object sender, RoutedEventArgs e)
         {
-            _editor.Undo();
+            Editor.Undo();
         }
 
         private void AppBar_RedoButton_Click(object sender, RoutedEventArgs e)
         {
-            _editor.Redo();
+            Editor.Redo();
         }
 
         private void AppBar_ClearButton_Click(object sender, RoutedEventArgs e)
         {
-            _editor.Clear();
+            Editor.Clear();
         }
 
         private void AppBar_ConvertButton_Click(object sender, RoutedEventArgs e)
         {
-            _editor.Convert(null, _editor.GetSupportedTargetConversionStates(null)[0]);
+            Editor.Convert(null, Editor.GetSupportedTargetConversionStates(null)[0]);
         }
 
         private void SetInputMode(InputMode inputMode)
         {
             UcEditor.InputMode = inputMode;
-            this.autoToggleButton.IsChecked = (inputMode == InputMode.AUTO);
-            this.touchPointerToggleButton.IsChecked = (inputMode == InputMode.TOUCH);
-            this.editToggleButton.IsChecked = (inputMode == InputMode.PEN);
+            autoToggleButton.IsChecked = (inputMode == InputMode.AUTO);
+            touchPointerToggleButton.IsChecked = (inputMode == InputMode.TOUCH);
+            editToggleButton.IsChecked = (inputMode == InputMode.PEN);
         }
 
         private void AppBar_TouchPointerButton_Click(object sender, RoutedEventArgs e)
         {
-            if ((bool)((ToggleButton)(sender)).IsChecked)
+          var isChecked = ((ToggleButton)(sender)).IsChecked;
+          if (isChecked != null && (bool)isChecked)
             {
                 SetInputMode(InputMode.TOUCH);
             }
@@ -91,7 +86,8 @@ namespace MyScript.IInk.GetStarted
 
         private void AppBar_EditButton_Click(object sender, RoutedEventArgs e)
         {
-            if ((bool)((ToggleButton)(sender)).IsChecked)
+            var isChecked = ((ToggleButton)(sender)).IsChecked;
+            if (isChecked != null && (bool)isChecked)
             {
                 SetInputMode(InputMode.PEN);
             }
@@ -99,7 +95,8 @@ namespace MyScript.IInk.GetStarted
 
         private void AppBar_AutoButton_Click(object sender, RoutedEventArgs e)
         {
-            if ((bool)((ToggleButton)(sender)).IsChecked)
+            var isChecked = ((ToggleButton)(sender)).IsChecked;
+            if (isChecked != null && (bool)isChecked)
             {
                 SetInputMode(InputMode.AUTO);
             }
@@ -108,23 +105,23 @@ namespace MyScript.IInk.GetStarted
         private void NewFile()
         {
             // Create package and part
-            string packageName = MakeUntitledFilename();
+            var packageName = MakeUntitledFilename();
             var package = _engine.CreatePackage(packageName);
-            var part = package.CreatePart(PART_TYPE);
-            _editor.Part = part;
-            Title.Text = "Type: " + PART_TYPE;
+            var part = package.CreatePart(PartType);
+            Editor.Part = part;
+            Title.Text = "Type: " + PartType;
         }
 
-        private string MakeUntitledFilename()
+        private static string MakeUntitledFilename()
         {
             var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
-            int num = 0;
+            var num = 0;
             string name;
 
             do
             {
-                string baseName = "File" + (++num) + ".iink";
-                name = System.IO.Path.Combine(localFolder.ToString(), baseName);
+                var baseName = "File" + (++num) + ".iink";
+                name = System.IO.Path.Combine(localFolder, baseName);
             }
             while (System.IO.File.Exists(name));
 

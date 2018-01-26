@@ -4,17 +4,19 @@ using MyScript.IInk.Graphics;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.Text;
+using System;
 using System.Numerics;
 using System.Collections.Generic;
 using Windows.Foundation;
-using Microsoft.Graphics.Canvas.UI.Xaml;
 
 namespace MyScript.IInk.UIReferenceImplementation
 {
     public class Canvas : ICanvas
     {
-        private IRenderTarget _target;
         private CanvasDrawingSession _session;
+        private IRenderTarget _target;
+        private ImageLoader _imageLoader;
+
         private Transform _transform;
         private float _strokeWidth { get; set; }
         private Windows.UI.Color _strokeColor { get; set; }
@@ -23,50 +25,52 @@ namespace MyScript.IInk.UIReferenceImplementation
         private CanvasFilledRegionDetermination _fillRule { get; set; }
         private CanvasTextFormat _fontProperties { get; set; }
         private Dictionary<string, Rect> _layers;
-        private CanvasActiveLayer _activeLayer;
-        private Rect _activeLayerRect;
-        private CanvasVirtualControl _control;
         private float _baseline;
 
-        public Canvas(IRenderTarget target)
-        {
+        private CanvasActiveLayer _activeLayer;
+        private Rect _activeLayerRect;
 
-            this._target = target;
-            _session = null;
+        public Canvas(CanvasDrawingSession session, IRenderTarget target, ImageLoader imageLoader)
+        {
+            _session = session;
+            _target = target;
+            _imageLoader = imageLoader;
 
             _transform = new Transform(1, 0, 0, 0, 1, 0);
 
             _strokeWidth = 1.0f;
             _strokeColor = Windows.UI.Colors.Transparent;
 
-            _strokeStyle = new CanvasStrokeStyle();
-            _strokeStyle.StartCap = CanvasCapStyle.Flat;
-            _strokeStyle.EndCap = CanvasCapStyle.Flat;
-            _strokeStyle.DashCap = CanvasCapStyle.Flat;
-            _strokeStyle.LineJoin = CanvasLineJoin.Miter;
+            _strokeStyle = new CanvasStrokeStyle
+            {
+                StartCap = CanvasCapStyle.Flat,
+                EndCap = CanvasCapStyle.Flat,
+                DashCap = CanvasCapStyle.Flat,
+                LineJoin = CanvasLineJoin.Miter
+            };
 
             _fillColor = Windows.UI.Colors.Black;
             _fillRule = CanvasFilledRegionDetermination.Winding;
 
-            _fontProperties = new CanvasTextFormat();
-            _fontProperties.FontStyle = Windows.UI.Text.FontStyle.Normal;
-            _fontProperties.FontWeight = Windows.UI.Text.FontWeights.Normal;
+            _fontProperties = new CanvasTextFormat
+            {
+                FontStyle = Windows.UI.Text.FontStyle.Normal,
+                FontWeight = Windows.UI.Text.FontWeights.Normal
+            };
+
+            _baseline = 1.0f;
 
             _layers = new Dictionary<string, Rect>();
             _activeLayer = null;
             _activeLayerRect = Rect.Empty;
-
-            _baseline = 1.0f;
         }
 
-        public void Begin(CanvasDrawingSession session, CanvasVirtualControl control)
+        public void Begin()
         {
-            _control = control;
-            this._session = session;
-            this._session.Antialiasing = CanvasAntialiasing.Antialiased;
-            this._session.TextAntialiasing = CanvasTextAntialiasing.Auto;
+            _session.Antialiasing = CanvasAntialiasing.Antialiased;
+            _session.TextAntialiasing = CanvasTextAntialiasing.Auto;
 
-            Style defaultStyle = new Style();
+            var defaultStyle = new Style();
             defaultStyle.SetChangeFlags((uint)StyleFlag.StyleFlag_ALL);
             defaultStyle.ApplyTo(this);
         }
@@ -78,7 +82,7 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         public void Clear(Color color)
         {
-            Windows.UI.Color color_ = Windows.UI.Color.FromArgb((byte)color.A, (byte)color.R, (byte)color.G, (byte)color.B);
+            var color_ = Windows.UI.Color.FromArgb((byte)color.A, (byte)color.R, (byte)color.G, (byte)color.B);
             _session.Clear(color_);
         }
 
@@ -158,9 +162,9 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         public void SetFillRule(FillRule rule)
         {
-            if (rule == MyScript.IInk.Graphics.FillRule.NONZERO)
+            if (rule == FillRule.NONZERO)
                 _fillRule = CanvasFilledRegionDetermination.Winding;
-            else if (rule == MyScript.IInk.Graphics.FillRule.EVENODD)
+            else if (rule == FillRule.EVENODD)
                 _fillRule = CanvasFilledRegionDetermination.Alternate;
         }
 
@@ -168,12 +172,18 @@ namespace MyScript.IInk.UIReferenceImplementation
         {
             _fontProperties.FontFamily = family;
 
-            if (style == "oblique")
-                _fontProperties.FontStyle = Windows.UI.Text.FontStyle.Oblique;
-            else if (style == "italic")
-                _fontProperties.FontStyle = Windows.UI.Text.FontStyle.Italic;
-            else //if (style == "normal")
-                _fontProperties.FontStyle = Windows.UI.Text.FontStyle.Normal;
+            switch (style)
+            {
+                case "oblique":
+                    _fontProperties.FontStyle = Windows.UI.Text.FontStyle.Oblique;
+                    break;
+                case "italic":
+                    _fontProperties.FontStyle = Windows.UI.Text.FontStyle.Italic;
+                    break;
+                default: // "normal"
+                    _fontProperties.FontStyle = Windows.UI.Text.FontStyle.Normal;
+                    break;
+            }
 
             if (weight >= 700)
                 _fontProperties.FontWeight = Windows.UI.Text.FontWeights.Bold;
@@ -184,7 +194,7 @@ namespace MyScript.IInk.UIReferenceImplementation
 
             _fontProperties.FontSize = size;
 
-            CanvasTextLayout canvasTextLayout = new CanvasTextLayout(CanvasDevice.GetSharedDevice(), "k", _fontProperties, float.MaxValue, float.MaxValue);
+            var canvasTextLayout = new CanvasTextLayout(_session.Device, "k", _fontProperties, float.MaxValue, float.MaxValue);
             _baseline = canvasTextLayout.LineMetrics[0].Baseline;
         }
 
@@ -213,7 +223,7 @@ namespace MyScript.IInk.UIReferenceImplementation
         {
             if (_layers.ContainsKey(id))
             {
-                Rect rect = _layers[id];
+                var rect = _layers[id];
 
                 _layers.Remove(id);
 
@@ -221,7 +231,7 @@ namespace MyScript.IInk.UIReferenceImplementation
                 {
                     _activeLayer.Dispose();
                     _activeLayer = null;
-                    _activeLayerRect = Rect.Empty; ;
+                    _activeLayerRect = Rect.Empty;
                 }
 
                 if (rect.IsEmpty == false)
@@ -245,7 +255,7 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         public IPath CreatePath()
         {
-            return new Path(_control.Device);
+            return new Path(_session.Device);
         }
 
         /// <summary>Draw Path to canvas according path</summary>
@@ -290,7 +300,56 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         public void DrawObject(string url, string mimeType, float x, float y, float width, float height)
         {
-            // TODO
+            if (_imageLoader == null)
+                return;
+
+            var transform = _transform;
+            var screenMin = transform.Apply(x, y);
+            var screenMax = transform.Apply(x + width, y + height);
+
+            var image = _imageLoader.getImage(  url, mimeType,
+                                                (url_, image_) =>
+                                                {
+                                                    var renderer = _imageLoader.Editor.Renderer;
+                                                    var x_ = (int)Math.Floor(screenMin.X);
+                                                    var y_ = (int)Math.Floor(screenMin.Y);
+                                                    var width_ = (int)Math.Ceiling(screenMax.X) - x_;
+                                                    var height_ = (int)Math.Ceiling(screenMax.Y) - y_;
+                                                    _target.Invalidate(renderer, x_, y_, width_, height_, LayerType.LayerType_ALL);
+                                                } );
+
+            if (image == null)
+            {
+                // image is not ready yet...
+                if (_fillColor.A > 0)
+                {
+                    _session.FillRectangle(x, y, width, height, _fillColor);
+                }
+            }
+            else
+            {
+                // adjust rectangle so that the image gets fit into original rectangle
+                var size = image.SizeInPixels;
+                float fx = width / (float)size.Width;
+                float fy = height / (float)size.Height;
+
+                if (fx > fy)
+                {
+                    float w = (float)(size.Width) * fy;
+                    x += (width - w) / 2;
+                    width = w;
+                }
+                else
+                {
+                    float h = (float)(size.Height) * fx;
+                    y += (height - h) / 2;
+                    height = h;
+                }
+
+                // draw the image
+                var rect = new Rect(x, y, width, height);
+                _session.DrawImage(image, rect, new Rect(0, 0, size.Width, size.Height));
+            }
         }
 
         /// <summary>Draw Text to canvas according coordinates and label</summary>
