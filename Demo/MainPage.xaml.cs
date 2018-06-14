@@ -362,14 +362,21 @@ namespace MyScript.IInk.Demo
             if (_editor.Part == null)
                 return;
 
-            var rootBlock = _editor.GetRootBlock();
             var contentBlock = _lastSelectedBlock;
+            if (contentBlock == null)
+                return;
+
+            var rootBlock = _editor.GetRootBlock();
+            var isRoot = contentBlock.Id == rootBlock.Id;
+            if (!isRoot && (contentBlock.Type == "Container") )
+                return;
 
             var onRawContent = part.Type == "Raw Content";
-            var isContainer = contentBlock.Type == "Container";
-            var isRoot = contentBlock.Id == _editor.GetRootBlock().Id;
+            var onTextDocument = part.Type == "Text Document";
 
-            var supportedTypes  = _editor.SupportedAddBlockTypes;
+            var isEmpty = _editor.IsEmpty(contentBlock);
+
+            var supportedTypes = _editor.SupportedAddBlockTypes;
             var supportedExports = _editor.GetSupportedExportMimeTypes(onRawContent ? rootBlock : contentBlock);
             var supportedImports = _editor.GetSupportedImportMimeTypes(contentBlock);
             var supportedStates = _editor.GetSupportedTargetConversionStates(contentBlock);
@@ -379,56 +386,22 @@ namespace MyScript.IInk.Demo
             var hasImports = (supportedImports != null) && supportedImports.Any();
             var hasStates = (supportedStates != null) && supportedStates.Any();
 
-            var displayConvert  = hasStates && !isContainer && !_editor.IsEmpty(contentBlock);
-            var displayAddBlock = hasTypes && isContainer;
-            var displayAddImage = false; // hasTypes && isContainer;
-            var displayRemove   = !isRoot && !isContainer;
-            var displayCopy     = !isRoot && !isContainer;
-            var displayPaste    = hasTypes && isContainer;
+            var displayConvert  = hasStates && !isEmpty;
+            var displayAddBlock = hasTypes && isRoot;
+            var displayAddImage = false; // hasTypes && isRoot;
+            var displayRemove   = !isRoot;
+            var displayCopy     = (onTextDocument ? !isRoot : !onRawContent);
+            var displayPaste    = hasTypes && isRoot;
             var displayImport   = hasImports;
             var displayExport   = hasExports;
-            var displayOfficeClipboard = hasExports && supportedExports.Contains(MimeType.OFFICE_CLIPBOARD);
+            var displayClipboard = hasExports && supportedExports.Contains(MimeType.OFFICE_CLIPBOARD);
 
             var flyoutMenu = new MenuFlyout();
-
-            if (displayConvert)
-            {
-                var command = new FlyoutCommand("Convert", (cmd) => { Popup_CommandHandler_Convert(cmd); });
-                var flyoutItem = new MenuFlyoutItem { Text = "Convert", Command = command };
-                flyoutMenu.Items.Add(flyoutItem);
-            }
-
-            if (displayRemove)
-            {
-                var command = new FlyoutCommand("Remove", (cmd) => { Popup_CommandHandler_Remove(cmd); });
-                var flyoutItem = new MenuFlyoutItem { Text = "Remove", Command = command };
-                flyoutMenu.Items.Add(flyoutItem);
-            }
-
-            if (displayCopy)
-            {
-                var command = new FlyoutCommand("Copy", (cmd) => { Popup_CommandHandler_Copy(cmd); });
-                var flyoutItem = new MenuFlyoutItem { Text = "Copy", Command = command };
-                flyoutMenu.Items.Add(flyoutItem);
-            }
-
-            if (displayPaste)
-            {
-                var command = new FlyoutCommand("Paste", (cmd) => { Popup_CommandHandler_Paste(cmd); });
-                var flyoutItem = new MenuFlyoutItem { Text = "Paste", Command = command };
-                flyoutMenu.Items.Add(flyoutItem);
-            }
-
-            if (displayOfficeClipboard)
-            {
-                var command = new FlyoutCommand("Copy To Clipboard (Microsoft Office)", (cmd) => { Popup_CommandHandler_OfficeClipboard(cmd); });
-                var flyoutItem = new MenuFlyoutItem { Text = "Copy To Clipboard (Microsoft Office)", Command = command };
-                flyoutMenu.Items.Add(flyoutItem);
-            }
 
             if (displayAddBlock || displayAddImage)
             {
                 var flyoutSubItem = new MenuFlyoutSubItem { Text = "Add..." };
+                flyoutMenu.Items.Add(flyoutSubItem);
 
                 if (displayAddBlock)
                 {
@@ -446,32 +419,73 @@ namespace MyScript.IInk.Demo
                     var flyoutItem = new MenuFlyoutItem { Text = "Add Image", Command = command };
                     flyoutSubItem.Items.Add(flyoutItem);
                 }
+            }
 
+            if (displayRemove)
+            {
+                var command = new FlyoutCommand("Remove", (cmd) => { Popup_CommandHandler_Remove(cmd); });
+                var flyoutItem = new MenuFlyoutItem { Text = "Remove", Command = command };
+                flyoutMenu.Items.Add(flyoutItem);
+            }
+
+            if (displayConvert)
+            {
+                var command = new FlyoutCommand("Convert", (cmd) => { Popup_CommandHandler_Convert(cmd); });
+                var flyoutItem = new MenuFlyoutItem { Text = "Convert", Command = command };
+                flyoutMenu.Items.Add(flyoutItem);
+            }
+
+            if (displayCopy || displayClipboard || displayPaste)
+            {
+                var flyoutSubItem = new MenuFlyoutSubItem { Text = "Copy/Paste..." };
                 flyoutMenu.Items.Add(flyoutSubItem);
+
+                //if (displayCopy)
+                {
+                    var command = new FlyoutCommand("Copy", (cmd) => { Popup_CommandHandler_Copy(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Copy", Command = command,  IsEnabled = displayCopy };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+
+                //if (displayClipboard)
+                {
+                    var command = new FlyoutCommand("Copy To Clipboard (Microsoft Office)", (cmd) => { Popup_CommandHandler_OfficeClipboard(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Copy To Clipboard (Microsoft Office)", Command = command, IsEnabled = displayClipboard };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+
+                //if (displayPaste)
+                {
+                    var command = new FlyoutCommand("Paste", (cmd) => { Popup_CommandHandler_Paste(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Paste", Command = command, IsEnabled = displayPaste };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
             }
 
             if (displayImport || displayExport)
             {
                 var flyoutSubItem = new MenuFlyoutSubItem { Text = "Import/Export..." };
+                flyoutMenu.Items.Add(flyoutSubItem);
 
-                if (displayImport)
+                //if (displayImport)
                 {
                     var command = new FlyoutCommand("Import", (cmd) => { Popup_CommandHandler_Import(cmd); });
-                    var flyoutItem = new MenuFlyoutItem { Text = "Import", Command = command  };
+                    var flyoutItem = new MenuFlyoutItem { Text = "Import", Command = command, IsEnabled = displayImport };
                     flyoutSubItem.Items.Add(flyoutItem);
                 }
 
-                if (displayExport)
+                //if (displayExport)
                 {
                     var command = new FlyoutCommand("Export", (cmd) => { Popup_CommandHandler_Export(cmd); });
-                    var flyoutItem = new MenuFlyoutItem { Text = "Export", Command = command };
+                    var flyoutItem = new MenuFlyoutItem { Text = "Export", Command = command, IsEnabled = displayExport };
                     flyoutSubItem.Items.Add(flyoutItem);
                 }
-
-                flyoutMenu.Items.Add(flyoutSubItem);
             }
 
-            flyoutMenu.ShowAt(null, globalPos);
+            if (flyoutMenu.Items.Count > 0)
+            {
+                flyoutMenu.ShowAt(null, globalPos);
+            }
         }
 
         private void UcEditor_Holding(object sender, Windows.UI.Xaml.Input.HoldingRoutedEventArgs e)
@@ -491,7 +505,7 @@ namespace MyScript.IInk.Demo
             _lastPointerPosition = new Graphics.Point((float)pos.X, (float)pos.Y);
             _lastSelectedBlock = _editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
 
-            if (_lastSelectedBlock == null)
+            if ( (_lastSelectedBlock == null) || (_lastSelectedBlock.Type == "Container") )
                 _lastSelectedBlock = _editor.GetRootBlock();
 
             // Discard current stroke
@@ -518,7 +532,7 @@ namespace MyScript.IInk.Demo
             _lastPointerPosition = new Graphics.Point((float)pos.X, (float)pos.Y);
             _lastSelectedBlock = _editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
 
-            if (_lastSelectedBlock == null)
+            if ( (_lastSelectedBlock == null) || (_lastSelectedBlock.Type == "Container") )
                 _lastSelectedBlock = _editor.GetRootBlock();
 
             if (_lastSelectedBlock != null)
@@ -545,7 +559,7 @@ namespace MyScript.IInk.Demo
             _lastPointerPosition = new Graphics.Point((float)p.Position.X, (float)p.Position.Y);
             _lastSelectedBlock = _editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
 
-            if (_lastSelectedBlock == null)
+            if ( (_lastSelectedBlock == null) || (_lastSelectedBlock.Type == "Container") )
                 _lastSelectedBlock = _editor.GetRootBlock();
 
             if (_lastSelectedBlock != null)
