@@ -101,6 +101,9 @@
     <Content Include="..\recognition-assets\conf\diagram.conf">
       <Link>conf\diagram.conf</Link>
     </Content>
+    <Content Include="..\recognition-assets\conf\raw-content.conf">
+      <Link>conf\raw-content.conf</Link>
+    </Content>
     <Content Include="..\recognition-assets\conf\en_US.conf">
       <Link>conf\en_US.conf</Link>
     </Content>
@@ -109,6 +112,9 @@
     </Content>
     <Content Include="..\recognition-assets\resources\analyzer\ank-diagram.res">
       <Link>resources\analyzer\ank-diagram.res</Link>
+    </Content>
+    <Content Include="..\recognition-assets\resources\analyzer\ank-raw-content.res">
+      <Link>resources\analyzer\ank-raw-content.res</Link>
     </Content>
     <Content Include="..\recognition-assets\resources\en_US\en_US-ak-cur.res">
       <Link>resources\en_US\en_US-ak-cur.res</Link>
@@ -119,8 +125,8 @@
     <Content Include="..\recognition-assets\resources\math\math-ak.res">
       <Link>resources\math\math-ak.res</Link>
     </Content>
-    <Content Include="..\recognition-assets\resources\math\math-grm-atk.res">
-      <Link>resources\math\math-grm-atk.res</Link>
+    <Content Include="..\recognition-assets\resources\math\math-grm-standard.res">
+      <Link>resources\math\math-grm-standard.res</Link>
     </Content>
     <Content Include="..\recognition-assets\resources\shape\shk-diagram.res">
       <Link>resources\shape\shk-diagram.res</Link>
