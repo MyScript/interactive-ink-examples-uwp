@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace MyScript.IInk.UIReferenceImplementation
 {
-    public class FontMetricsProvider : IFontMetricsProvider
+    public class FontMetricsProvider : IFontMetricsProvider2
     {
         private float dpiX;
         private float dpiY;
@@ -31,13 +31,13 @@ namespace MyScript.IInk.UIReferenceImplementation
             return (mmm / 25.4f) * dpi;
         }
 
-        public Rectangle[] GetCharacterBoundingBoxes(MyScript.IInk.Text.Text text, TextSpan[] spans)
+        private static List<GlyphMetrics> GetGlyphMetrics_(MyScript.IInk.Text.Text text, TextSpan[] spans, CanvasDevice canvasDevice, float dpiX, float dpiY)
         {
+            var glyphMetrics = new List<GlyphMetrics>();
+
             var label = text.Label;
-            var rects = new List<Rectangle>();
             var firstStyle = spans.First().Style;
 
-            var myTEE = StringInfo.GetTextElementEnumerator(label);
             var textFormat = new CanvasTextFormat()
             {
                 FontSize = mm2px(firstStyle.FontSize, dpiY),
@@ -46,27 +46,24 @@ namespace MyScript.IInk.UIReferenceImplementation
             var firstChar = label.FirstOrDefault();
             textFormat.FontFamily = firstStyle.FontFamily;
 
-            var canvasTextLayout = new CanvasTextLayout(CanvasDevice.GetSharedDevice(), label, textFormat, float.MaxValue, float.MaxValue);
+            var canvasTextLayout = new CanvasTextLayout(canvasDevice, label, textFormat, float.MaxValue, float.MaxValue);
 
-            var beginCharPosition = 0;
-            var charCount = label.Length - 1;
-            // Construct the string with different styles
             for (var i = 0; i < spans.Length; ++i)
             {
                 var style = spans[i].Style;
-                if (spans.Length > 0)
-                {
-                    var interval = spans.ElementAt(i);
-                    beginCharPosition = interval.BeginPosition;
-                    charCount = (int)(interval.EndPosition - interval.BeginPosition) + 1;
-                }
+                var interval = spans.ElementAt(i);
+                var beginCharPosition = interval.BeginPosition;
+                var charCount = (int)(interval.EndPosition - interval.BeginPosition) + 1;
+
                 var fontWeight = new Windows.UI.Text.FontWeight();
                 fontWeight.Weight = (ushort)style.FontWeight;
+
                 var fontStyle = Windows.UI.Text.FontStyle.Normal;
                 if (style.FontStyle == "italic")
                     fontStyle = Windows.UI.Text.FontStyle.Italic;
                 else if (style.FontStyle == "oblique")
                     fontStyle = Windows.UI.Text.FontStyle.Oblique;
+
                 canvasTextLayout.SetFontSize(beginCharPosition, charCount, mm2px(firstStyle.FontSize, dpiY));
                 canvasTextLayout.SetFontWeight(beginCharPosition, charCount, fontWeight);
                 canvasTextLayout.SetFontStyle(beginCharPosition, charCount, fontStyle);
@@ -74,28 +71,61 @@ namespace MyScript.IInk.UIReferenceImplementation
             }
 
             var baseline = canvasTextLayout.LineMetrics[0].Baseline;
+            var myTEE = StringInfo.GetTextElementEnumerator(label);
             while (myTEE.MoveNext())
             {
-                var canvasCharLayout = new CanvasTextLayout(CanvasDevice.GetSharedDevice(), myTEE.GetTextElement(), textFormat, 2000, 1000);
+                var canvasCharLayout = new CanvasTextLayout(canvasTextLayout.Device, myTEE.GetTextElement(), textFormat, 2000, 1000);
                 canvasCharLayout.SetFontSize(0, 1, canvasTextLayout.GetFontSize(myTEE.ElementIndex));
                 canvasCharLayout.SetFontStyle(0, 1, canvasTextLayout.GetFontStyle(myTEE.ElementIndex));
                 canvasCharLayout.SetFontWeight(0, 1, canvasTextLayout.GetFontWeight(myTEE.ElementIndex));
                 canvasCharLayout.SetFontFamily(0, 1, canvasTextLayout.GetFontFamily(myTEE.ElementIndex));
-                var drawCharBounds = canvasCharLayout.DrawBounds;
 
-                var v2 = canvasTextLayout.GetCaretPosition(myTEE.ElementIndex, false);
-                var newX = (float)drawCharBounds.X + v2.X;
-                var newY = (float)drawCharBounds.Y - baseline;
+                var charRect = canvasCharLayout.DrawBounds;
+                var charPos = canvasTextLayout.GetCaretPosition(myTEE.ElementIndex, false);
+                var charX = (float)charRect.X + charPos.X;
+                var charY = (float)charRect.Y - baseline;
+                var charLeftBearing = (float)(-charRect.Left);
+                var charRightBearing = 0.0f;
 
-                //Need to do little translation to clip to the line
-                rects.Add(new Rectangle(px2mm(newX, dpiX), px2mm(newY, dpiY), px2mm((float)drawCharBounds.Width, dpiX), px2mm((float)drawCharBounds.Height, dpiY)));
+                var glyphX = px2mm(charX, dpiX);
+                var glyphY = px2mm(charY, dpiY);
+                var glyphW = px2mm((float)charRect.Width, dpiX);
+                var glyphH = px2mm((float)charRect.Height, dpiY);
+                var glyphRect = new Rectangle(glyphX, glyphY, glyphW, glyphH);
+                var glyphLeftBearing = px2mm(charLeftBearing, dpiX);
+                var glyphRightBearing = px2mm(charRightBearing, dpiX);
+
+                glyphMetrics.Add(new GlyphMetrics(glyphRect, glyphLeftBearing, glyphRightBearing));
             }
-            return rects.ToArray();
+
+            return glyphMetrics;
+        }
+
+        public Rectangle[] GetCharacterBoundingBoxes(MyScript.IInk.Text.Text text, TextSpan[] spans)
+        {
+            var glyphMetrics = GetGlyphMetrics_(text, spans, CanvasDevice.GetSharedDevice(), dpiX, dpiY);
+            var rectangles = new List<Rectangle>();
+
+            foreach (var metrics in glyphMetrics)
+                rectangles.Add(metrics.BoundingBox);
+
+            return rectangles.ToArray();
         }
 
         public float GetFontSizePx(Style style)
         {
             return style.FontSize;
         }
-    };
+
+        public bool SupportsGlyphMetrics()
+        {
+            return true;
+        }
+
+        public GlyphMetrics[] GetGlyphMetrics(MyScript.IInk.Text.Text text, TextSpan[] spans)
+        {
+            var glyphMetrics = GetGlyphMetrics_(text, spans, CanvasDevice.GetSharedDevice(), dpiX, dpiY);
+            return glyphMetrics.ToArray();
+        }
+   };
 }
