@@ -459,9 +459,46 @@ namespace MyScript.IInk.Demo
             flyoutMenu.ShowAt(null, globalPos);
         }
 
+        private void UcEditor_Holding(object sender, Windows.UI.Xaml.Input.HoldingRoutedEventArgs e)
+        {
+            // Only for Pen and Touch (but it should not been fired for a Mouse)
+            // Do not wait for the Release event, open the menu immediately
+
+            if (e.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
+                return;
+            
+            if (e.HoldingState != Windows.UI.Input.HoldingState.Started)
+                return;
+
+            var uiElement = sender as UIElement;
+            var pos = e.GetPosition(uiElement);
+
+            _lastPointerPosition = new Graphics.Point((float)pos.X, (float)pos.Y);
+            _lastSelectedBlock = _editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
+
+            if (_lastSelectedBlock == null)
+                _lastSelectedBlock = _editor.GetRootBlock();
+
+            // Discard current stroke
+            UcEditor.CancelSampling(e.PointerDeviceType);
+
+            if (_lastSelectedBlock != null)
+            {
+                var globalPos = e.GetPosition(null);
+                DisplayContextualMenu(globalPos);
+            }
+
+            e.Handled = true;
+        }
+
         private void UcEditor_RightTapped(object sender, Windows.UI.Xaml.Input.RightTappedRoutedEventArgs e)
         {
-            var pos = e.GetPosition(UcEditor);
+            // Only for Mouse to avoid issue with LongPress becoming RightTap with Pen/Touch
+            if (e.PointerDeviceType != Windows.Devices.Input.PointerDeviceType.Mouse)
+                return;
+
+            var uiElement = sender as UIElement;
+            var pos = e.GetPosition(uiElement);
 
             _lastPointerPosition = new Graphics.Point((float)pos.X, (float)pos.Y);
             _lastSelectedBlock = _editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
@@ -473,8 +510,36 @@ namespace MyScript.IInk.Demo
             {
                 var globalPos = e.GetPosition(null);
                 DisplayContextualMenu(globalPos);
-                e.Handled = true;
             }
+
+            e.Handled = true;
+        }
+
+        private void UcEditor_RightDown(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            // Only for Pen to avoid issue with LongPress becoming RightTap with Pen/Touch
+            var uiElement = sender as UIElement;
+            var p = e.GetCurrentPoint(uiElement);
+
+            if (e.Pointer.PointerDeviceType != Windows.Devices.Input.PointerDeviceType.Pen)
+                return;
+
+            if (!p.Properties.IsRightButtonPressed)
+                return;
+
+            _lastPointerPosition = new Graphics.Point((float)p.Position.X, (float)p.Position.Y);
+            _lastSelectedBlock = _editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
+
+            if (_lastSelectedBlock == null)
+                _lastSelectedBlock = _editor.GetRootBlock();
+
+            if (_lastSelectedBlock != null)
+            {
+                var globalPos = e.GetCurrentPoint(null).Position;
+                DisplayContextualMenu(globalPos);
+            }
+
+            e.Handled = true;
         }
 
         private void ShowSmartGuideMenu(Windows.Foundation.Point globalPos)

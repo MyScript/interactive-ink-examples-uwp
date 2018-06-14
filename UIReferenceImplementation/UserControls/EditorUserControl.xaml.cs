@@ -128,11 +128,11 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         private Layer _temporaryLayer;
         private Layer _captureLayer;
 
-        private bool _onScroll = false;
-        private bool _leftButtonPressed = false;
-        private Graphics.Point _lastPointerPosition;
-
         public InputMode InputMode { get; set; }
+
+        private int _pointerId = -1;
+        private bool _onScroll = false;
+        private Graphics.Point _lastPointerPosition;
 
         public EditorUserControl()
         {
@@ -302,28 +302,38 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             }
         }
 
+        private int GetPointerId(PointerRoutedEventArgs e)
+        {
+            return (int)e.Pointer.PointerDeviceType;
+        }
+
+        public void CancelSampling(Windows.Devices.Input.PointerDeviceType pointerType)
+        {
+            _editor.PointerCancel((int)pointerType);
+            _pointerId = -1;
+        }
+
         private void Capture_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
             var uiElement = sender as UIElement;
             var p = e.GetCurrentPoint(uiElement);
 
-            // When using mouse consider left button only
-            if (e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
-            {
-                if (_leftButtonPressed || !p.Properties.IsLeftButtonPressed)
-                    return;
-                _leftButtonPressed = true;
-            }
+            if (_pointerId != -1)
+                return;
 
-            var pointerType = GetPointerType(e);
+            // Consider left button only
+            if ( (!p.Properties.IsLeftButtonPressed) || (p.Properties.PointerUpdateKind != Windows.UI.Input.PointerUpdateKind.LeftButtonPressed) )
+                return;
+
+            // Capture the pointer to the target.
+            uiElement?.CapturePointer(e.Pointer);
+
+            _pointerId = (int)e.Pointer.PointerId;
             _lastPointerPosition = new Graphics.Point((float)p.Position.X, (float)p.Position.Y);
             _onScroll = false;
 
             // Send pointer down event to the editor
-            _editor.PointerDown((float)p.Position.X, (float)p.Position.Y, GetTimestamp(p), p.Properties.Pressure, pointerType, (int)e.Pointer.PointerId);
-
-            // Capture the pointer to the target.
-            uiElement?.CapturePointer(e.Pointer);
+            _editor.PointerDown((float)p.Position.X, (float)p.Position.Y, GetTimestamp(p), p.Properties.Pressure, GetPointerType(e), GetPointerId(e));
 
             // Prevent most handlers along the event route from handling the same event again.
             e.Handled = true;
@@ -334,16 +344,16 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             var uiElement = sender as UIElement;
             var p = e.GetCurrentPoint(uiElement);
 
+            if (_pointerId != (int)e.Pointer.PointerId)
+                return;
+
             // Ignore pointer move when the pointing device is up
             if (!p.IsInContact)
                 return;
 
-            // When using mouse consider left button only
-            if (e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
-            {
-                if (!_leftButtonPressed)
-                    return;
-            }
+            // Consider left button only
+            if (!p.Properties.IsLeftButtonPressed)
+                return;
 
             var pointerType = GetPointerType(e);
             var previousPosition = _lastPointerPosition;
@@ -360,7 +370,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 if (_onScroll)
                 {
                     // Entering scrolling mode, cancel previous pointerDown event
-                    _editor.PointerCancel((int)e.Pointer.PointerId);
+                    _editor.PointerCancel(GetPointerId(e));
                 }
             }
 
@@ -374,7 +384,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             else
             {
                 // Send pointer move event to the editor
-                _editor.PointerMove((float)p.Position.X, (float)p.Position.Y, GetTimestamp(p), p.Properties.Pressure, pointerType, (int)e.Pointer.PointerId);
+                _editor.PointerMove((float)p.Position.X, (float)p.Position.Y, GetTimestamp(p), p.Properties.Pressure, pointerType, GetPointerId(e));
             }
 
             // Prevent most handlers along the event route from handling the same event again.
@@ -386,15 +396,13 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             var uiElement = sender as UIElement;
             var p = e.GetCurrentPoint(uiElement);
 
-            // When using mouse consider left button only
-            if (e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
-            {
-                if (!_leftButtonPressed || p.Properties.IsLeftButtonPressed)
-                    return;
-                _leftButtonPressed = false;
-            }
+            if (_pointerId != (int)e.Pointer.PointerId)
+                return;
 
-            var pointerType = GetPointerType(e);
+            // Consider left button only
+            if ( (p.Properties.IsLeftButtonPressed) || (p.Properties.PointerUpdateKind != Windows.UI.Input.PointerUpdateKind.LeftButtonReleased) )
+                return;
+
             var previousPosition = _lastPointerPosition;
             _lastPointerPosition = new Graphics.Point((float)p.Position.X, (float)p.Position.Y);
 
@@ -411,8 +419,10 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             else
             {
                 // Send pointer move event to the editor
-                _editor.PointerUp((float)p.Position.X, (float)p.Position.Y, GetTimestamp(p), p.Properties.Pressure, pointerType, (int)e.Pointer.PointerId);            
+                _editor.PointerUp((float)p.Position.X, (float)p.Position.Y, GetTimestamp(p), p.Properties.Pressure, GetPointerType(e), GetPointerId(e));
             }
+
+            _pointerId = -1;
 
             // Release the pointer captured from the target
             uiElement?.ReleasePointerCapture(e.Pointer);
@@ -423,10 +433,16 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         private void Capture_PointerCanceled(object sender, PointerRoutedEventArgs e)
         {
+            var uiElement = sender as UIElement;
+            var p = e.GetCurrentPoint(uiElement);
+
+            if (_pointerId != (int)e.Pointer.PointerId)
+                return;
+
             // When using mouse consider left button only
             if (e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
             {
-                if (!_leftButtonPressed)
+                if (!p.Properties.IsLeftButtonPressed)
                     return;
             }
 
@@ -438,19 +454,13 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             else
             {
                 // Send pointer cancel event to the editor
-                _editor.PointerCancel((int)e.Pointer.PointerId);
+                _editor.PointerCancel(GetPointerId(e));
             }
+
+            _pointerId = -1;
 
             // Prevent most handlers along the event route from handling the same event again.
             e.Handled = true;
-        }
-
-        private void Capture_PointerLost(object sender, PointerRoutedEventArgs e)
-        {
-        }
-
-        private void Capture_PointerExited(object sender, PointerRoutedEventArgs e)
-        {
         }
 
         private void Capture_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
