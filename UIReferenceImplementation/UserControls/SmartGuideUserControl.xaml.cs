@@ -794,9 +794,6 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         {
             try
             {
-                _currentWords[command.WordIndex].Label = command.Label;
-                command.WordView.Text = command.Label;
-
                 var jiixStr = _editor.Export_(_currentBlock, MimeType.JIIX);
                 var jiix = JsonValue.Parse(jiixStr) as JsonObject;
                 var jiixWords = (JsonArray)jiix["words"];
@@ -804,6 +801,8 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 jiixWord["label"] = command.Label;
                 jiixStr = jiix.ToString();
                 _editor.Import_(MimeType.JIIX, jiixStr, _currentBlock);
+                _currentWords[command.WordIndex].Label = command.Label;
+                command.WordView.Text = command.Label;
             }
             catch
             {
