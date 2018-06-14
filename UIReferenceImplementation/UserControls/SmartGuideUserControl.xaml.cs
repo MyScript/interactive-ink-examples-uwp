@@ -247,7 +247,9 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
                 try
                 {
-                    jiixStr = _editor.Export_(_currentBlock, MimeType.JIIX);
+                    var conf = _editor.Engine.CreateParameterSet();
+                    conf.SetBoolean("export.jiix.strokes", false);
+                    jiixStr = _editor.Export_(_currentBlock, MimeType.JIIX, conf);
                 }
                 catch
                 {
@@ -794,7 +796,9 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         {
             try
             {
-                var jiixStr = _editor.Export_(_currentBlock, MimeType.JIIX);
+                var conf = _editor.Engine.CreateParameterSet();
+                conf.SetBoolean("export.jiix.strokes", false);
+                var jiixStr = _editor.Export_(_currentBlock, MimeType.JIIX, conf);
                 var jiix = JsonValue.Parse(jiixStr) as JsonObject;
                 var jiixWords = (JsonArray)jiix["words"];
                 var jiixWord = (JsonObject)jiixWords[command.WordIndex];
