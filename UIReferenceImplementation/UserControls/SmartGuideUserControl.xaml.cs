@@ -347,8 +347,6 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         private void UpdateWidgets(UpdateCause cause)
         {
-            _timer1.Stop();
-
             if (_currentBlock != null)
             {
                 // Update size and position
@@ -423,7 +421,6 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
                 // Visibility/Fading
                 {
-                    var configuration = _editor.Engine.Configuration;
                     int delay = 0;
 
                     if (cause == UpdateCause.Edit)
@@ -431,10 +428,17 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                     else
                         delay = fadeOutOtherDelay;
 
-                    if (delay > 0)
+                    if (cause != UpdateCause.View)
                     {
-                        _timer1.Interval = TimeSpan.FromMilliseconds(delay);
-                        _timer1.Start();
+                        _timer1.Stop();
+
+                        if (delay > 0)
+                        {
+                            _timer1.Interval = TimeSpan.FromMilliseconds(delay);
+                            _timer1.Start();
+                        }
+
+                        this.Visibility = Windows.UI.Xaml.Visibility.Visible;
                     }
 
                     if (lastUpdatedItem != null)
@@ -442,12 +446,11 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                         _timer2.Interval = TimeSpan.FromMilliseconds(removeHighlightDelay);
                         _timer2.Start();
                     }
-
-                    this.Visibility = Windows.UI.Xaml.Visibility.Visible;
                 }
             }
             else
             {
+                _timer1.Stop();
                 ResetWidgets();
             }
         }
