@@ -1,6 +1,8 @@
 ﻿// Copyright MyScript. All right reserved.
 
 using MyScript.IInk.UIReferenceImplementation.UserControls;
+using System;
+using System.Linq;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -62,9 +64,20 @@ namespace MyScript.IInk.GetStarted
             Editor.Clear();
         }
 
-        private void AppBar_ConvertButton_Click(object sender, RoutedEventArgs e)
+        private async void AppBar_ConvertButton_Click(object sender, RoutedEventArgs e)
         {
-            Editor.Convert(null, Editor.GetSupportedTargetConversionStates(null)[0]);
+            try
+            {
+                var supportedStates = Editor.GetSupportedTargetConversionStates(null);
+
+                if ( (supportedStates != null) && (supportedStates.Count() > 0) )
+                  Editor.Convert(null, supportedStates[0]);
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new Windows.UI.Popups.MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
         }
 
         private void SetInputMode(InputMode inputMode)
@@ -77,8 +90,8 @@ namespace MyScript.IInk.GetStarted
 
         private void AppBar_TouchPointerButton_Click(object sender, RoutedEventArgs e)
         {
-          var isChecked = ((ToggleButton)(sender)).IsChecked;
-          if (isChecked != null && (bool)isChecked)
+            var isChecked = ((ToggleButton)(sender)).IsChecked;
+            if (isChecked != null && (bool)isChecked)
             {
                 SetInputMode(InputMode.TOUCH);
             }
