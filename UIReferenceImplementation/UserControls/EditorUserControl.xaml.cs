@@ -7,7 +7,6 @@ using Microsoft.Graphics.Canvas.UI.Xaml;
 using Windows.UI.Core;
 using Windows.System;
 using Windows.Graphics.Display;
-using UIReferenceImplementation;
 using Windows.UI.Popups;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236

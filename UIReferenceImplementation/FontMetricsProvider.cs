@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace UIReferenceImplementation
+namespace MyScript.IInk.UIReferenceImplementation
 {
     public class FontMetricsProvider : IFontMetricsProvider
     {
@@ -31,7 +31,7 @@ namespace UIReferenceImplementation
             return (mmm / 25.4f) * dpi;
         }
 
-        public Rectangle[] GetCharacterBoundingBoxes(Text text, TextSpan[] spans)
+        public Rectangle[] GetCharacterBoundingBoxes(MyScript.IInk.Text.Text text, TextSpan[] spans)
         {
             var label = text.Label;
             var rects = new List<Rectangle>();
