@@ -18,9 +18,6 @@
       <AppBarButton Icon="Undo" Label="Undo" Click="AppBar_UndoButton_Click"/>
       <AppBarButton Icon="Redo" Label="Redo" Click="AppBar_RedoButton_Click"/>
       <AppBarButton Icon="Delete" Label="Clear" Click="AppBar_ClearButton_Click"/>
-      <AppBarButton Label="Convert" Click="AppBar_ConvertButton_Click">
-        <TextBlock TextAlignment="Center" Text="Convert" />
-      </AppBarButton>
       <AppBarSeparator/>
       <AppBarButton Icon="Add" Label="New part" Click="AppBar_NewPartButton_Click" />
       <AppBarButton Icon="Back" Label="Previous part" Click="AppBar_PreviousPartButton_Click" />
@@ -31,6 +28,7 @@
 
       <CommandBar.SecondaryCommands>
         <AppBarButton Label="Reset view" Click="AppBar_ResetViewButton_Click"/>
+        <AppBarButton Label="Convert" Click="AppBar_ConvertButton_Click" />
         <AppBarSeparator/>
         <AppBarButton Icon="NewFolder" Label="New" Click="AppBar_NewPackageButton_Click"/>
         <AppBarButton Icon="OpenFile" Label="Open" Click="AppBar_OpenPackageButton_Click"/>
