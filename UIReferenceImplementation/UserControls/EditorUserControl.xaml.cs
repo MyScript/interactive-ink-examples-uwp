@@ -30,7 +30,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         public void ViewTransformChanged(Renderer renderer)
         {
-            if (_ucEditor.SmartGuide != null)
+            if (_ucEditor.SmartGuideEnabled && _ucEditor.SmartGuide != null)
             {
                 var dispatcher = _ucEditor.Dispatcher;
                 var task = dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { _ucEditor.SmartGuide.OnTransformChanged(); });
@@ -49,7 +49,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         public void PartChanged(Editor editor)
         {
-            if (_ucEditor.SmartGuide != null)
+            if (_ucEditor.SmartGuideEnabled && _ucEditor.SmartGuide != null)
             {
                 var dispatcher = _ucEditor.Dispatcher;
                 var task = dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { _ucEditor.SmartGuide.OnPartChanged(); });
@@ -58,7 +58,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         public void ContentChanged(Editor editor, string[] blockIds)
         {
-            if (_ucEditor.SmartGuide != null)
+            if (_ucEditor.SmartGuideEnabled && _ucEditor.SmartGuide != null)
             {
                 var dispatcher = _ucEditor.Dispatcher;
                 var task = dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { _ucEditor.SmartGuide.OnContentChanged(blockIds); });
@@ -67,7 +67,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         public void SelectionChanged(Editor editor, string[] blockIds)
         {
-            if (_ucEditor.SmartGuide != null)
+            if (_ucEditor.SmartGuideEnabled && _ucEditor.SmartGuide != null)
             {
                 var dispatcher = _ucEditor.Dispatcher;
                 var task = dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { _ucEditor.SmartGuide.OnSelectionChanged(blockIds); });
@@ -76,7 +76,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         public void ActiveBlockChanged(Editor editor, string blockId)
         {
-            if (_ucEditor.SmartGuide != null)
+            if (_ucEditor.SmartGuideEnabled && _ucEditor.SmartGuide != null)
             {
                 var dispatcher = _ucEditor.Dispatcher;
                 var task = dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { _ucEditor.SmartGuide.OnActiveBlockChanged(blockId); });
@@ -102,6 +102,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         private Editor _editor;
         private Renderer _renderer;
         private ImageLoader _loader;
+        private bool _smartGuideEnabled = true;
 
         public Engine Engine
         {
@@ -126,6 +127,19 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         private Layer _modelLayer;
         private Layer _temporaryLayer;
         private Layer _captureLayer;
+
+        public bool SmartGuideEnabled
+        {
+            get
+            {
+                return _smartGuideEnabled;
+            }
+
+            set
+            {
+                EnableSmartGuide(value);
+            }
+        }
 
         public InputMode InputMode { get; set; }
 
@@ -239,6 +253,17 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 _temporaryLayer.Update(x, y, width, height);
             if ((layers & LayerType.CAPTURE) != 0)
                 _captureLayer.Update(x, y, width, height);
+        }
+
+        private void EnableSmartGuide(bool enable)
+        {
+            if (_smartGuideEnabled == enable)
+                return;
+
+            _smartGuideEnabled = enable;
+
+            if (!_smartGuideEnabled && smartGuide != null)
+                smartGuide.Visibility = Visibility.Collapsed;
         }
 
         public void OnResize(int width, int height)

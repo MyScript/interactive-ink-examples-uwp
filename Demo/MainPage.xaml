@@ -14,14 +14,15 @@
       <RowDefinition Height="auto"></RowDefinition>
       <RowDefinition Height="*"></RowDefinition>
     </Grid.RowDefinitions>
+
     <CommandBar>
       <AppBarButton Icon="Undo" Label="Undo" Click="AppBar_UndoButton_Click"/>
       <AppBarButton Icon="Redo" Label="Redo" Click="AppBar_RedoButton_Click"/>
       <AppBarButton Icon="Delete" Label="Clear" Click="AppBar_ClearButton_Click"/>
       <AppBarSeparator/>
-      <AppBarButton Icon="Add" Label="New part" Click="AppBar_NewPartButton_Click" />
+      <AppBarButton Icon="Add" Label="New part" Click="AppBar_NewPartButton_Click"/>
       <AppBarButton Icon="Back" Label="Previous part" Click="AppBar_PreviousPartButton_Click" />
-      <AppBarButton Icon="Forward" Label="Next part" Click="AppBar_NextPartButton_Click" />
+      <AppBarButton Icon="Forward" Label="Next part" Click="AppBar_NextPartButton_Click"/>
       <AppBarSeparator/>
       <AppBarButton Icon="ZoomIn" Label="Zoom in" Click="AppBar_ZoomInButton_Click"/>
       <AppBarButton Icon="ZoomOut" Label="Zoom out" Click="AppBar_ZoomOutButton_Click"/>
@@ -34,7 +35,10 @@
         <AppBarButton Icon="OpenFile" Label="Open" Click="AppBar_OpenPackageButton_Click"/>
         <AppBarButton Icon="Save" Label="Save" Click="AppBar_SavePackageButton_Click"/>
         <AppBarButton Icon="SaveLocal" Label="Save as" Click="AppBar_SaveAsButton_Click"/>
+        <AppBarSeparator/>
+        <AppBarToggleButton Label="Smart Guide" IsChecked="True" Click="AppBar_EnableSmartGuide_Click"/>
       </CommandBar.SecondaryCommands>
+
       <CommandBar.Content>
         <TextBlock x:Name="Title" Margin="12,14" FontFamily="bold" FontSize="16"/>
       </CommandBar.Content>

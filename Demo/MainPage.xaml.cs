@@ -1088,5 +1088,11 @@ namespace MyScript.IInk.Demo
 
             return null;
         }
+
+        private void AppBar_EnableSmartGuide_Click(object sender, RoutedEventArgs e)
+        {
+            AppBarToggleButton checkBox = sender as AppBarToggleButton;
+            UcEditor.SmartGuideEnabled = (bool)checkBox.IsChecked;
+        }
     }
 }
