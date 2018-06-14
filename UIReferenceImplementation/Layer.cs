@@ -73,14 +73,11 @@ namespace MyScript.IInk.UIReferenceImplementation
                 switch (Type)
                 {
                     case LayerType.BACKGROUND:
-                        {
-                          var white = new Color(0xffffffff);
-                          canvas.Begin();
-                          canvas.Clear(white);
-                          _renderer.DrawBackground(x, y, width, height, canvas);
-                          canvas.End();
-                          break;
-                        }
+                        canvas.Begin();
+                        _renderer.DrawBackground(x, y, width, height, canvas);
+                        canvas.End();
+                        break;
+
                     case LayerType.MODEL:
                         canvas.Begin();
                         _renderer.DrawModel(x, y, width, height, canvas);
