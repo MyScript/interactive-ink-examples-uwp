@@ -732,7 +732,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         private void OnMoreClicked(Object sender, TappedRoutedEventArgs e)
         {
-            if (_activeBlock != null)
+            if (_currentBlock != null)
             {
                 var globalPos = e.GetPosition(null);
                 _moreClicked?.Invoke(globalPos);
