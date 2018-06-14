@@ -258,13 +258,7 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
-iink_sdk-examples-uwp/recognition-assets/conf/diagram.conf
-iink_sdk-examples-uwp/recognition-assets/conf/en_US.conf
-iink_sdk-examples-uwp/recognition-assets/conf/math.conf
-iink_sdk-examples-uwp/recognition-assets/resources/analyzer/ank-diagram.res
-iink_sdk-examples-uwp/recognition-assets/resources/en_US/en_US-ak-cur.res
-iink_sdk-examples-uwp/recognition-assets/resources/en_US/en_US-lk-text.res
-iink_sdk-examples-uwp/recognition-assets/resources/math/math-ak.res
-iink_sdk-examples-uwp/recognition-assets/resources/math/math-grm-atk.res
-iink_sdk-examples-uwp/recognition-assets/resources/shape/shk-diagram.res
+
+# Recognition Assets
 recognition-assets/
+INFO/
