@@ -873,6 +873,9 @@ namespace MyScript.IInk.Demo
 
         private async System.Threading.Tasks.Task<Tuple<int, string>> EnterImportData(string title, MimeType[] mimeTypes)
         {
+            const bool defaultWrapping = false;
+            const double defaultWidth = 400;
+
             var mimeTypeTextBlock = new TextBlock
             {
                 Text = "Choose a mime type",
@@ -881,15 +884,15 @@ namespace MyScript.IInk.Demo
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 0, 0),
-                Width = 300,
+                Width = defaultWidth,
             };
 
             var mimeTypeComboBox = new ComboBox
             {
                 IsTextSearchEnabled = true,
                 SelectedIndex = -1,
-                Margin = new Thickness(0, 5, 0, 0),
-                Width = 300
+                Margin = new Thickness(0, 5, 0, 5),
+                Width = defaultWidth
             };
 
             foreach (var mimeType in mimeTypes)
@@ -904,21 +907,38 @@ namespace MyScript.IInk.Demo
                 TextWrapping = TextWrapping.NoWrap,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 10, 0, 0),
-                Width = 300
+                Margin = new Thickness(0, 5, 0, 0),
+                Width = defaultWidth
             };
 
             var dataTextBox = new TextBox
             {
                 Text = "",
-                AcceptsReturn = false,
-                MaxLength = 1024 * 1024,
-                TextWrapping = TextWrapping.NoWrap,
+                AcceptsReturn = true,
+                TextWrapping = (defaultWrapping ? TextWrapping.Wrap : TextWrapping.NoWrap),
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 5, 0, 10),
-                Width = 300
+                FontSize = 12,
+                Margin = new Thickness(0),
+                Width = defaultWidth,
+                Height = 200,
             };
+
+            ScrollViewer.SetVerticalScrollBarVisibility(dataTextBox, ScrollBarVisibility.Auto);
+            ScrollViewer.SetHorizontalScrollBarVisibility(dataTextBox, ScrollBarVisibility.Auto);
+
+            var dataWrappingCheckBox = new CheckBox
+            {
+                Content = "Wrapping",
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 5),
+                Width = defaultWidth,
+                IsChecked = defaultWrapping,
+            };
+
+            dataWrappingCheckBox.Checked    += new RoutedEventHandler( (sender, e) =>  { dataTextBox.TextWrapping = TextWrapping.Wrap; } );
+            dataWrappingCheckBox.Unchecked  += new RoutedEventHandler( (sender, e) =>  { dataTextBox.TextWrapping = TextWrapping.NoWrap; } );
 
             var panel = new StackPanel
             {
@@ -931,6 +951,7 @@ namespace MyScript.IInk.Demo
             panel.Children.Add(mimeTypeComboBox);
             panel.Children.Add(dataTextBlock);
             panel.Children.Add(dataTextBox);
+            panel.Children.Add(dataWrappingCheckBox);
 
 
             var dialog = new ContentDialog
@@ -945,7 +966,12 @@ namespace MyScript.IInk.Demo
 
             var result = await dialog.ShowAsync();
             if (result == ContentDialogResult.Primary)
-                return new Tuple<int, string>(mimeTypeComboBox.SelectedIndex, dataTextBox.Text);
+            {
+                // Convert '\r' to '\n'
+                // https://stackoverflow.com/questions/42867242/uwp-textbox-puts-r-only-how-to-set-linebreak
+                var text = dataTextBox.Text.Replace('\r', '\n');
+                return new Tuple<int, string>(mimeTypeComboBox.SelectedIndex, text);
+            }
 
             return null;
         }
