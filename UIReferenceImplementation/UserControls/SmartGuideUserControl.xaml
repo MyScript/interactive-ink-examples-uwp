@@ -12,7 +12,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="32" />
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="32" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
         <Border x:Name="styleBorder" Grid.Row="0" Grid.Column="0"

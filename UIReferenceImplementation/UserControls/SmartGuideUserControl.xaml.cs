@@ -78,7 +78,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         private Editor _editor;
 
-        public event MoreClickedHandler MoreClicked;
+        private event MoreClickedHandler _moreClicked;
 
         private ContentBlock _activeBlock;
         private ContentBlock _selectedBlock;
@@ -103,6 +103,12 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         {
             get { return _editor; }
             set { SetEditor(value); }
+        }
+
+        public event MoreClickedHandler MoreClicked
+        {
+            add { _moreClicked += value; UpdateMoreItemVisibility(); }
+            remove { _moreClicked -= value; UpdateMoreItemVisibility(); }
         }
 
         public ContentBlock ContentBlock
@@ -130,6 +136,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         private void Initialize()
         {
             this.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+            UpdateMoreItemVisibility();
 
             // Required for positionning using margins
             this.HorizontalAlignment = HorizontalAlignment.Left;
@@ -159,6 +166,11 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             scrollItem.IsScrollInertiaEnabled = false;
             scrollItem.IsDeferredScrollingEnabled = false;
             scrollItem.ZoomMode = ZoomMode.Disabled;
+        }
+
+        private void UpdateMoreItemVisibility()
+        {
+            moreItem.Visibility = (_moreClicked != null) ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void SetEditor(Editor editor)
@@ -723,7 +735,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             if (_activeBlock != null)
             {
                 var globalPos = e.GetPosition(null);
-                MoreClicked?.Invoke(globalPos);
+                _moreClicked?.Invoke(globalPos);
             }
 
             e.Handled = true;
