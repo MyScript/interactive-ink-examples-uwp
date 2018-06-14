@@ -302,14 +302,19 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             }
         }
 
-        private int GetPointerId(PointerRoutedEventArgs e)
+        public int GetPointerId(RoutedEventArgs e)
         {
-            return (int)e.Pointer.PointerDeviceType;
+            if (e is PointerRoutedEventArgs)
+                return (int)((PointerRoutedEventArgs)e).Pointer.PointerDeviceType;
+            else if (e is HoldingRoutedEventArgs)
+                return (int)((HoldingRoutedEventArgs)e).PointerDeviceType;
+
+            return -1;
         }
 
-        public void CancelSampling(Windows.Devices.Input.PointerDeviceType pointerType)
+        public void CancelSampling(int pointerId)
         {
-            _editor.PointerCancel((int)pointerType);
+            _editor.PointerCancel(pointerId);
             _pointerId = -1;
         }
 

@@ -480,7 +480,7 @@ namespace MyScript.IInk.Demo
                 _lastSelectedBlock = _editor.GetRootBlock();
 
             // Discard current stroke
-            UcEditor.CancelSampling(e.PointerDeviceType);
+            UcEditor.CancelSampling(UcEditor.GetPointerId(e));
 
             if (_lastSelectedBlock != null)
             {
