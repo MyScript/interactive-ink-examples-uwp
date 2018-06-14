@@ -358,10 +358,19 @@ namespace MyScript.IInk.Demo
 
         private void DisplayContextualMenu(Windows.Foundation.Point globalPos)
         {
+            var part = _editor.Part;
+            if (_editor.Part == null)
+                return;
+
+            var rootBlock = _editor.GetRootBlock();
             var contentBlock = _lastSelectedBlock;
 
-            var supportedTypes = _editor.SupportedAddBlockTypes;
-            var supportedExports = _editor.GetSupportedExportMimeTypes(contentBlock);
+            var onRawContent = part.Type == "Raw Content";
+            var isContainer = contentBlock.Type == "Container";
+            var isRoot = contentBlock.Id == _editor.GetRootBlock().Id;
+
+            var supportedTypes  = _editor.SupportedAddBlockTypes;
+            var supportedExports = _editor.GetSupportedExportMimeTypes(onRawContent ? rootBlock : contentBlock);
             var supportedImports = _editor.GetSupportedImportMimeTypes(contentBlock);
             var supportedStates = _editor.GetSupportedTargetConversionStates(contentBlock);
 
@@ -369,9 +378,6 @@ namespace MyScript.IInk.Demo
             var hasExports = (supportedExports != null) && supportedExports.Any();
             var hasImports = (supportedImports != null) && supportedImports.Any();
             var hasStates = (supportedStates != null) && supportedStates.Any();
-
-            var isContainer = contentBlock.Type == "Container";
-            var isRoot = contentBlock.Id == _editor.GetRootBlock().Id;
 
             var displayConvert  = hasStates && !isContainer && !_editor.IsEmpty(contentBlock);
             var displayAddBlock = hasTypes && isContainer;
@@ -709,10 +715,13 @@ namespace MyScript.IInk.Demo
             if (part == null)
                 return;
 
-            if (_lastSelectedBlock == null)
+            var onRawContent = part.Type == "Raw Content";
+            var contentBlock = onRawContent ? _editor.GetRootBlock() : _lastSelectedBlock;
+
+            if (contentBlock == null)
                 return;
 
-            var mimeTypes = _editor.GetSupportedExportMimeTypes(_lastSelectedBlock);
+            var mimeTypes = _editor.GetSupportedExportMimeTypes(contentBlock);
 
             if (mimeTypes == null)
                 return;
@@ -757,7 +766,7 @@ namespace MyScript.IInk.Demo
                     drawer.ImageLoader = UcEditor.ImageLoader;
 
                     _editor.WaitForIdle();
-                    _editor.Export_(_lastSelectedBlock, filePath, drawer);
+                    _editor.Export_(contentBlock, filePath, drawer);
 
                     var file = await StorageFile.GetFileFromPathAsync(filePath);
                     await Windows.System.Launcher.LaunchFileAsync(file);
