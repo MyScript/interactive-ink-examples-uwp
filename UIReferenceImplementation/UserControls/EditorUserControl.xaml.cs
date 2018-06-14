@@ -133,11 +133,16 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         private int _pointerId = -1;
         private bool _onScroll = false;
         private Graphics.Point _lastPointerPosition;
+        private System.Int64 _eventTimeOffset = 0;
 
         public EditorUserControl()
         {
             InitializeComponent();
             InputMode = InputMode.PEN;
+
+            var msFromEpoch = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            var msFromBoot = System.Environment.TickCount;
+            _eventTimeOffset = msFromEpoch - msFromBoot;
         }
 
         public void UserControl_Loaded(object sender, RoutedEventArgs e)
@@ -279,8 +284,9 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         private System.Int64 GetTimestamp(Windows.UI.Input.PointerPoint point)
         {
-            // Convert the time to milliseconds
-            return (System.Int64)point.Timestamp / 1000;
+            // Convert the timestamp (from boot time) to milliseconds
+            // and add offset to get the time from EPOCH
+            return _eventTimeOffset + (System.Int64)(point.Timestamp / 1000);
         }
 
         private PointerType GetPointerType(PointerRoutedEventArgs e)
