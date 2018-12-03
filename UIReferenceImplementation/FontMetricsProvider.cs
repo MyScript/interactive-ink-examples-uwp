@@ -65,11 +65,9 @@ namespace MyScript.IInk.UIReferenceImplementation
         private FontKey FontKeyFromStyle(Style style)
         {
             var fontSize = mm2px(style.FontSize, dpiY);
-
-            var fontWeight = new Windows.UI.Text.FontWeight();
-            fontWeight.Weight = (ushort)style.FontWeight;
-
+            var fontWeight = new Windows.UI.Text.FontWeight() {  Weight = (ushort)style.FontWeight };
             var fontStyle = Windows.UI.Text.FontStyle.Normal;
+
             if (style.FontStyle == "italic")
                 fontStyle = Windows.UI.Text.FontStyle.Italic;
             else if (style.FontStyle == "oblique")
@@ -156,28 +154,22 @@ namespace MyScript.IInk.UIReferenceImplementation
             GlyphMetrics[] glyphMetrics = new GlyphMetrics[text.GlyphCount];
 
             var firstStyle = spans[0].Style;
-            var firstFontWeight = new Windows.UI.Text.FontWeight() { Weight = (ushort)firstStyle.FontWeight };
-            var firstFontStyle = Windows.UI.Text.FontStyle.Normal;
-            if (firstStyle.FontStyle == "italic")
-                firstFontStyle = Windows.UI.Text.FontStyle.Italic;
-            else if (firstStyle.FontStyle == "oblique")
-                firstFontStyle = Windows.UI.Text.FontStyle.Oblique;
-
-            var textFormat = new CanvasTextFormat()
-            {
-                FontSize = mm2px(firstStyle.FontSize, dpiY),
-                FontFamily = firstStyle.FontFamily,
-                FontStyle = firstFontStyle,
-                FontWeight = firstFontWeight
-            };
+            var firstFontKey = FontKeyFromStyle(firstStyle);
 
             if (text.GlyphCount == 1)
             {
-                var fontKey = FontKeyFromStyle(firstStyle);
-                glyphMetrics[0] = GetGlyphMetrics(fontKey, text.Label, canvasDevice);
+                glyphMetrics[0] = GetGlyphMetrics(firstFontKey, text.Label, canvasDevice);
             }
             else
             {
+                var textFormat = new CanvasTextFormat()
+                {
+                    FontSize = mm2px(firstStyle.FontSize, dpiY),
+                    FontFamily = firstStyle.FontFamily,
+                    FontStyle = firstFontKey.FontStyle,
+                    FontWeight = firstFontKey.FontWeight
+                };
+
                 using (var canvasTextLayout = new CanvasTextLayout(canvasDevice, text.Label, textFormat, 10000, 10000))
                 {
                     for (int i = 0; i < spans.Length; ++i)
