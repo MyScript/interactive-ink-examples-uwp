@@ -16,7 +16,7 @@ if (-not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\diagram.
 
 		# Download myscript-iink-recognition-math.zip
 		$clnt = new-object System.Net.WebClient
-		$url = "https://s3-us-west-2.amazonaws.com/iink/assets/1.2.0/myscript-iink-recognition-math.zip"
+		$url = "https://s3-us-west-2.amazonaws.com/iink/assets/1.3.0/myscript-iink-recognition-math.zip"
 		$file = "$PSScriptRoot\myscript-iink-recognition-math.zip"
 
 		$clnt.DownloadFile($url,$file)
@@ -30,7 +30,7 @@ if (-not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\diagram.
 		# Download myscript-iink-recognition-diagram.zip
 
 		$clnt = new-object System.Net.WebClient
-		$url = "https://s3-us-west-2.amazonaws.com/iink/assets/1.2.0/myscript-iink-recognition-diagram.zip"
+		$url = "https://s3-us-west-2.amazonaws.com/iink/assets/1.3.0/myscript-iink-recognition-diagram.zip"
 		$file = "$PSScriptRoot\myscript-iink-recognition-diagram.zip"
 		$clnt.DownloadFile($url,$file)
 
@@ -43,7 +43,7 @@ if (-not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\diagram.
 		# Download myscript-iink-recognition-raw-content.zip
 
 		$clnt = new-object System.Net.WebClient
-		$url = "https://s3-us-west-2.amazonaws.com/iink/assets/1.2.0/myscript-iink-recognition-raw-content.zip"
+		$url = "https://s3-us-west-2.amazonaws.com/iink/assets/1.3.0/myscript-iink-recognition-raw-content.zip"
 		$file = "$PSScriptRoot\myscript-iink-recognition-raw-content.zip"
 		$clnt.DownloadFile($url,$file)
 
@@ -56,7 +56,7 @@ if (-not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\diagram.
 		# Download myscript-iink-recognition-text-en_US.zip
 
 		$clnt = new-object System.Net.WebClient
-		$url = "https://s3-us-west-2.amazonaws.com/iink/assets/1.2.0/myscript-iink-recognition-text-en_US.zip"
+		$url = "https://s3-us-west-2.amazonaws.com/iink/assets/1.3.0/myscript-iink-recognition-text-en_US.zip"
 		$file = "$PSScriptRoot\myscript-iink-recognition-text-en_US.zip"
 		$clnt.DownloadFile($url,$file)
 
