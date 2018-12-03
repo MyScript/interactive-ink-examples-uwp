@@ -194,8 +194,10 @@ namespace MyScript.IInk.UIReferenceImplementation
 
             _fontProperties.FontSize = size;
 
-            var canvasTextLayout = new CanvasTextLayout(_session.Device, "k", _fontProperties, float.MaxValue, float.MaxValue);
-            _baseline = canvasTextLayout.LineMetrics[0].Baseline;
+            using (var canvasTextLayout = new CanvasTextLayout(_session.Device, "k", _fontProperties, float.MaxValue, float.MaxValue))
+            {
+                _baseline = canvasTextLayout.LineMetrics[0].Baseline;
+            }
         }
 
         public void StartGroup(string id, float x, float y, float width, float height, bool clipContent)
