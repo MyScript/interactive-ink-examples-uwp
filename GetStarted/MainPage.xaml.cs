@@ -117,12 +117,24 @@ namespace MyScript.IInk.GetStarted
 
         private void NewFile()
         {
+            // Close current package
+            if (Editor.Part != null)
+            {
+                var part = Editor.Part;
+                var package = part?.Package;
+                Editor.Part = null;
+                part?.Dispose();
+                package?.Dispose();
+            }
+
             // Create package and part
-            var packageName = MakeUntitledFilename();
-            var package = _engine.CreatePackage(packageName);
-            var part = package.CreatePart(PartType);
-            Editor.Part = part;
-            Title.Text = "Type: " + PartType;
+            {
+                var packageName = MakeUntitledFilename();
+                var package = _engine.CreatePackage(packageName);
+                var part = package.CreatePart(PartType);
+                Editor.Part = part;
+                Title.Text = "Type: " + PartType;
+            }
         }
 
         private static string MakeUntitledFilename()

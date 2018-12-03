@@ -175,6 +175,13 @@ namespace MyScript.IInk.Demo
 
                 // Create package and part
                 var package = _editor.Part.Package;
+
+                _lastSelectedBlock?.Dispose();
+                _lastSelectedBlock = null;
+
+                _editor.Part.Dispose();
+                _editor.Part = null;
+
                 var part = package.CreatePart(partType);
                 _editor.Part = part;
                 Title.Text = _packageName + " - " + part.Type;
@@ -195,9 +202,16 @@ namespace MyScript.IInk.Demo
                     UcEditor.ResetView(false);
 
                     // Select new part
+                    _lastSelectedBlock?.Dispose();
+                    _lastSelectedBlock = null;
+
+                    _editor.Part = null;
+
                     var newPart = part.Package.GetPart(index - 1);
                     _editor.Part = newPart;
                     Title.Text = _packageName + " - " + newPart.Type;
+
+                    part.Dispose();
                 }
             }
         }
@@ -216,9 +230,16 @@ namespace MyScript.IInk.Demo
                     UcEditor.ResetView(false);
 
                     // Select new part
+                    _lastSelectedBlock?.Dispose();
+                    _lastSelectedBlock = null;
+
+                    _editor.Part = null;
+
                     var newPart = part.Package.GetPart(index + 1);
                     _editor.Part = newPart;
                     Title.Text = _packageName + " - " + newPart.Type;
+
+                    part.Dispose();
                 }
             }
         }
@@ -272,13 +293,30 @@ namespace MyScript.IInk.Demo
             var fileName = fileList.SelectedValue.ToString();
             var filePath = System.IO.Path.Combine(localFolder.Path.ToString(), fileName);
 
+            // Close current package
+            _lastSelectedBlock?.Dispose();
+            _lastSelectedBlock = null;
+
+            if (_editor.Part != null)
+            {
+                var part = _editor.Part;
+                var package = part?.Package;
+                _editor.Part = null;
+                part?.Dispose();
+                package?.Dispose();
+            }
+
+            // Reset viewing parameters
+            UcEditor.ResetView(false);
+
             // Open package and select first part
-            _editor.Part = null;
-            var package = _engine.OpenPackage(filePath);
-            var part = package.GetPart(0);
-            _editor.Part = part;
-            _packageName = fileName;
-            Title.Text = _packageName + " - " + part.Type;
+            {
+                var package = _engine.OpenPackage(filePath);
+                var part = package.GetPart(0);
+                _editor.Part = part;
+                _packageName = fileName;
+                Title.Text = _packageName + " - " + part.Type;
+            }
         }
 
         private void AppBar_SavePackageButton_Click(object sender, RoutedEventArgs e)
@@ -362,129 +400,131 @@ namespace MyScript.IInk.Demo
             if (_editor.Part == null)
                 return;
 
-            var contentBlock = _lastSelectedBlock;
-            if (contentBlock == null)
-                return;
-
-            var rootBlock = _editor.GetRootBlock();
-            var isRoot = contentBlock.Id == rootBlock.Id;
-            if (!isRoot && (contentBlock.Type == "Container") )
-                return;
-
-            var onRawContent = part.Type == "Raw Content";
-            var onTextDocument = part.Type == "Text Document";
-
-            var isEmpty = _editor.IsEmpty(contentBlock);
-
-            var supportedTypes = _editor.SupportedAddBlockTypes;
-            var supportedExports = _editor.GetSupportedExportMimeTypes(onRawContent ? rootBlock : contentBlock);
-            var supportedImports = _editor.GetSupportedImportMimeTypes(contentBlock);
-            var supportedStates = _editor.GetSupportedTargetConversionStates(contentBlock);
-
-            var hasTypes = (supportedTypes != null) && supportedTypes.Any();
-            var hasExports = (supportedExports != null) && supportedExports.Any();
-            var hasImports = (supportedImports != null) && supportedImports.Any();
-            var hasStates = (supportedStates != null) && supportedStates.Any();
-
-            var displayConvert  = hasStates && !isEmpty;
-            var displayAddBlock = hasTypes && isRoot;
-            var displayAddImage = false; // hasTypes && isRoot;
-            var displayRemove   = !isRoot;
-            var displayCopy     = (onTextDocument ? !isRoot : !onRawContent);
-            var displayPaste    = hasTypes && isRoot;
-            var displayImport   = hasImports;
-            var displayExport   = hasExports;
-            var displayClipboard = hasExports && supportedExports.Contains(MimeType.OFFICE_CLIPBOARD);
-
-            var flyoutMenu = new MenuFlyout();
-
-            if (displayAddBlock || displayAddImage)
+            using (var rootBlock = _editor.GetRootBlock())
             {
-                var flyoutSubItem = new MenuFlyoutSubItem { Text = "Add..." };
-                flyoutMenu.Items.Add(flyoutSubItem);
+                var contentBlock = _lastSelectedBlock;
+                if (contentBlock == null)
+                    return;
 
-                if (displayAddBlock)
+                var isRoot = contentBlock.Id == rootBlock.Id;
+                if (!isRoot && (contentBlock.Type == "Container") )
+                    return;
+
+                var onRawContent = part.Type == "Raw Content";
+                var onTextDocument = part.Type == "Text Document";
+
+                var isEmpty = _editor.IsEmpty(contentBlock);
+
+                var supportedTypes = _editor.SupportedAddBlockTypes;
+                var supportedExports = _editor.GetSupportedExportMimeTypes(onRawContent ? rootBlock : contentBlock);
+                var supportedImports = _editor.GetSupportedImportMimeTypes(contentBlock);
+                var supportedStates = _editor.GetSupportedTargetConversionStates(contentBlock);
+
+                var hasTypes = (supportedTypes != null) && supportedTypes.Any();
+                var hasExports = (supportedExports != null) && supportedExports.Any();
+                var hasImports = (supportedImports != null) && supportedImports.Any();
+                var hasStates = (supportedStates != null) && supportedStates.Any();
+
+                var displayConvert  = hasStates && !isEmpty;
+                var displayAddBlock = hasTypes && isRoot;
+                var displayAddImage = false; // hasTypes && isRoot;
+                var displayRemove   = !isRoot;
+                var displayCopy     = (onTextDocument ? !isRoot : !onRawContent);
+                var displayPaste    = hasTypes && isRoot;
+                var displayImport   = hasImports;
+                var displayExport   = hasExports;
+                var displayClipboard = hasExports && supportedExports.Contains(MimeType.OFFICE_CLIPBOARD);
+
+                var flyoutMenu = new MenuFlyout();
+
+                if (displayAddBlock || displayAddImage)
                 {
-                    for (var i = 0; i < supportedTypes.Count(); ++i)
+                    var flyoutSubItem = new MenuFlyoutSubItem { Text = "Add..." };
+                    flyoutMenu.Items.Add(flyoutSubItem);
+
+                    if (displayAddBlock)
                     {
-                        var command = new FlyoutCommand(supportedTypes[i], (cmd) => { Popup_CommandHandler_AddBlock(cmd); });
-                        var flyoutItem = new MenuFlyoutItem { Text = "Add " + supportedTypes[i], Command = command };
+                        for (var i = 0; i < supportedTypes.Count(); ++i)
+                        {
+                            var command = new FlyoutCommand(supportedTypes[i], (cmd) => { Popup_CommandHandler_AddBlock(cmd); });
+                            var flyoutItem = new MenuFlyoutItem { Text = "Add " + supportedTypes[i], Command = command };
+                            flyoutSubItem.Items.Add(flyoutItem);
+                        }
+                    }
+
+                    if (displayAddImage)
+                    {
+                        var command = new FlyoutCommand("Image", (cmd) => { Popup_CommandHandler_AddImage(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Add Image", Command = command };
                         flyoutSubItem.Items.Add(flyoutItem);
                     }
                 }
 
-                if (displayAddImage)
+                if (displayRemove)
                 {
-                    var command = new FlyoutCommand("Image", (cmd) => { Popup_CommandHandler_AddImage(cmd); });
-                    var flyoutItem = new MenuFlyoutItem { Text = "Add Image", Command = command };
-                    flyoutSubItem.Items.Add(flyoutItem);
-                }
-            }
-
-            if (displayRemove)
-            {
-                var command = new FlyoutCommand("Remove", (cmd) => { Popup_CommandHandler_Remove(cmd); });
-                var flyoutItem = new MenuFlyoutItem { Text = "Remove", Command = command };
-                flyoutMenu.Items.Add(flyoutItem);
-            }
-
-            if (displayConvert)
-            {
-                var command = new FlyoutCommand("Convert", (cmd) => { Popup_CommandHandler_Convert(cmd); });
-                var flyoutItem = new MenuFlyoutItem { Text = "Convert", Command = command };
-                flyoutMenu.Items.Add(flyoutItem);
-            }
-
-            if (displayCopy || displayClipboard || displayPaste)
-            {
-                var flyoutSubItem = new MenuFlyoutSubItem { Text = "Copy/Paste..." };
-                flyoutMenu.Items.Add(flyoutSubItem);
-
-                //if (displayCopy)
-                {
-                    var command = new FlyoutCommand("Copy", (cmd) => { Popup_CommandHandler_Copy(cmd); });
-                    var flyoutItem = new MenuFlyoutItem { Text = "Copy", Command = command,  IsEnabled = displayCopy };
-                    flyoutSubItem.Items.Add(flyoutItem);
+                    var command = new FlyoutCommand("Remove", (cmd) => { Popup_CommandHandler_Remove(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Remove", Command = command };
+                    flyoutMenu.Items.Add(flyoutItem);
                 }
 
-                //if (displayClipboard)
+                if (displayConvert)
                 {
-                    var command = new FlyoutCommand("Copy To Clipboard (Microsoft Office)", (cmd) => { Popup_CommandHandler_OfficeClipboard(cmd); });
-                    var flyoutItem = new MenuFlyoutItem { Text = "Copy To Clipboard (Microsoft Office)", Command = command, IsEnabled = displayClipboard };
-                    flyoutSubItem.Items.Add(flyoutItem);
+                    var command = new FlyoutCommand("Convert", (cmd) => { Popup_CommandHandler_Convert(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Convert", Command = command };
+                    flyoutMenu.Items.Add(flyoutItem);
                 }
 
-                //if (displayPaste)
+                if (displayCopy || displayClipboard || displayPaste)
                 {
-                    var command = new FlyoutCommand("Paste", (cmd) => { Popup_CommandHandler_Paste(cmd); });
-                    var flyoutItem = new MenuFlyoutItem { Text = "Paste", Command = command, IsEnabled = displayPaste };
-                    flyoutSubItem.Items.Add(flyoutItem);
+                    var flyoutSubItem = new MenuFlyoutSubItem { Text = "Copy/Paste..." };
+                    flyoutMenu.Items.Add(flyoutSubItem);
+
+                    //if (displayCopy)
+                    {
+                        var command = new FlyoutCommand("Copy", (cmd) => { Popup_CommandHandler_Copy(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Copy", Command = command,  IsEnabled = displayCopy };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
+
+                    //if (displayClipboard)
+                    {
+                        var command = new FlyoutCommand("Copy To Clipboard (Microsoft Office)", (cmd) => { Popup_CommandHandler_OfficeClipboard(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Copy To Clipboard (Microsoft Office)", Command = command, IsEnabled = displayClipboard };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
+
+                    //if (displayPaste)
+                    {
+                        var command = new FlyoutCommand("Paste", (cmd) => { Popup_CommandHandler_Paste(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Paste", Command = command, IsEnabled = displayPaste };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
                 }
-            }
 
-            if (displayImport || displayExport)
-            {
-                var flyoutSubItem = new MenuFlyoutSubItem { Text = "Import/Export..." };
-                flyoutMenu.Items.Add(flyoutSubItem);
-
-                //if (displayImport)
+                if (displayImport || displayExport)
                 {
-                    var command = new FlyoutCommand("Import", (cmd) => { Popup_CommandHandler_Import(cmd); });
-                    var flyoutItem = new MenuFlyoutItem { Text = "Import", Command = command, IsEnabled = displayImport };
-                    flyoutSubItem.Items.Add(flyoutItem);
+                    var flyoutSubItem = new MenuFlyoutSubItem { Text = "Import/Export..." };
+                    flyoutMenu.Items.Add(flyoutSubItem);
+
+                    //if (displayImport)
+                    {
+                        var command = new FlyoutCommand("Import", (cmd) => { Popup_CommandHandler_Import(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Import", Command = command, IsEnabled = displayImport };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
+
+                    //if (displayExport)
+                    {
+                        var command = new FlyoutCommand("Export", (cmd) => { Popup_CommandHandler_Export(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Export", Command = command, IsEnabled = displayExport };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
                 }
 
-                //if (displayExport)
+                if (flyoutMenu.Items.Count > 0)
                 {
-                    var command = new FlyoutCommand("Export", (cmd) => { Popup_CommandHandler_Export(cmd); });
-                    var flyoutItem = new MenuFlyoutItem { Text = "Export", Command = command, IsEnabled = displayExport };
-                    flyoutSubItem.Items.Add(flyoutItem);
+                    flyoutMenu.ShowAt(null, globalPos);
                 }
-            }
-
-            if (flyoutMenu.Items.Count > 0)
-            {
-                flyoutMenu.ShowAt(null, globalPos);
             }
         }
 
@@ -503,10 +543,14 @@ namespace MyScript.IInk.Demo
             var pos = e.GetPosition(uiElement);
 
             _lastPointerPosition = new Graphics.Point((float)pos.X, (float)pos.Y);
+            _lastSelectedBlock?.Dispose();
             _lastSelectedBlock = _editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
 
             if ( (_lastSelectedBlock == null) || (_lastSelectedBlock.Type == "Container") )
+            {
+                _lastSelectedBlock?.Dispose();
                 _lastSelectedBlock = _editor.GetRootBlock();
+            }
 
             // Discard current stroke
             UcEditor.CancelSampling(UcEditor.GetPointerId(e));
@@ -530,10 +574,14 @@ namespace MyScript.IInk.Demo
             var pos = e.GetPosition(uiElement);
 
             _lastPointerPosition = new Graphics.Point((float)pos.X, (float)pos.Y);
+            _lastSelectedBlock?.Dispose();
             _lastSelectedBlock = _editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
 
             if ( (_lastSelectedBlock == null) || (_lastSelectedBlock.Type == "Container") )
+            {
+                _lastSelectedBlock?.Dispose();
                 _lastSelectedBlock = _editor.GetRootBlock();
+            }
 
             if (_lastSelectedBlock != null)
             {
@@ -557,10 +605,14 @@ namespace MyScript.IInk.Demo
                 return;
 
             _lastPointerPosition = new Graphics.Point((float)p.Position.X, (float)p.Position.Y);
+            _lastSelectedBlock?.Dispose();
             _lastSelectedBlock = _editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
 
             if ( (_lastSelectedBlock == null) || (_lastSelectedBlock.Type == "Container") )
+            {
+                _lastSelectedBlock?.Dispose();
                 _lastSelectedBlock = _editor.GetRootBlock();
+            }
 
             if (_lastSelectedBlock != null)
             {
@@ -573,7 +625,8 @@ namespace MyScript.IInk.Demo
 
         private void ShowSmartGuideMenu(Windows.Foundation.Point globalPos)
         {
-            _lastSelectedBlock = UcEditor.SmartGuide.ContentBlock;
+            _lastSelectedBlock?.Dispose();
+            _lastSelectedBlock = UcEditor.SmartGuide.ContentBlock?.ShallowCopy();
 
             if (_lastSelectedBlock != null)
                 DisplayContextualMenu(globalPos);
@@ -647,7 +700,11 @@ namespace MyScript.IInk.Demo
             try
             {
                 if (_lastSelectedBlock != null && _lastSelectedBlock.Type != "Container")
-                  _editor.RemoveBlock(_lastSelectedBlock);
+                {
+                    _editor.RemoveBlock(_lastSelectedBlock);
+                    _lastSelectedBlock.Dispose();
+                    _lastSelectedBlock = null;
+                }
             }
             catch (Exception ex)
             {
@@ -729,66 +786,69 @@ namespace MyScript.IInk.Demo
             if (part == null)
                 return;
 
-            var onRawContent = part.Type == "Raw Content";
-            var contentBlock = onRawContent ? _editor.GetRootBlock() : _lastSelectedBlock;
-
-            if (contentBlock == null)
-                return;
-
-            var mimeTypes = _editor.GetSupportedExportMimeTypes(contentBlock);
-
-            if (mimeTypes == null)
-                return;
-
-            if (mimeTypes.Count() == 0)
-                return;
-
-            // Show export dialog
-            var fileName = await ChooseExportFilename(mimeTypes);
-
-            if (!string.IsNullOrEmpty(fileName))
+            using (var rootBlock = _editor.GetRootBlock())
             {
-                var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
-                var item = await localFolder.TryGetItemAsync(fileName);
-                string filePath = null;
+                var onRawContent = part.Type == "Raw Content";
+                var contentBlock = onRawContent ? rootBlock : _lastSelectedBlock;
 
-                if (item != null)
+                if (contentBlock == null)
+                    return;
+
+                var mimeTypes = _editor.GetSupportedExportMimeTypes(contentBlock);
+
+                if (mimeTypes == null)
+                    return;
+
+                if (mimeTypes.Count() == 0)
+                    return;
+
+                // Show export dialog
+                var fileName = await ChooseExportFilename(mimeTypes);
+
+                if (!string.IsNullOrEmpty(fileName))
                 {
-                    ContentDialog overwriteDialog = new ContentDialog
+                    var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
+                    var item = await localFolder.TryGetItemAsync(fileName);
+                    string filePath = null;
+
+                    if (item != null)
                     {
-                        Title = "File Already Exists",
-                        Content = "A file with that name already exists, overwrite it?",
-                        PrimaryButtonText = "Cancel",
-                        SecondaryButtonText = "Overwrite"
-                    };
+                        ContentDialog overwriteDialog = new ContentDialog
+                        {
+                            Title = "File Already Exists",
+                            Content = "A file with that name already exists, overwrite it?",
+                            PrimaryButtonText = "Cancel",
+                            SecondaryButtonText = "Overwrite"
+                        };
 
-                    ContentDialogResult result = await overwriteDialog.ShowAsync();
-                    if (result == ContentDialogResult.Primary)
-                        return;
+                        ContentDialogResult result = await overwriteDialog.ShowAsync();
+                        if (result == ContentDialogResult.Primary)
+                            return;
 
-                    filePath = item.Path.ToString();
-                }
-                else
-                {
-                    filePath = System.IO.Path.Combine(localFolder.Path.ToString(), fileName);
-                }
+                        filePath = item.Path.ToString();
+                    }
+                    else
+                    {
+                        filePath = System.IO.Path.Combine(localFolder.Path.ToString(), fileName);
+                    }
 
-                try
-                {
-                    var drawer = new ImageDrawer();
+                    try
+                    {
+                        var drawer = new ImageDrawer();
 
-                    drawer.ImageLoader = UcEditor.ImageLoader;
+                        drawer.ImageLoader = UcEditor.ImageLoader;
 
-                    _editor.WaitForIdle();
-                    _editor.Export_(contentBlock, filePath, drawer);
+                        _editor.WaitForIdle();
+                        _editor.Export_(contentBlock, filePath, drawer);
 
-                    var file = await StorageFile.GetFileFromPathAsync(filePath);
-                    await Windows.System.Launcher.LaunchFileAsync(file);
-                }
-                catch (Exception ex)
-                {
-                    var msgDialog = new MessageDialog(ex.ToString());
-                    await msgDialog.ShowAsync();
+                        var file = await StorageFile.GetFileFromPathAsync(filePath);
+                        await Windows.System.Launcher.LaunchFileAsync(file);
+                    }
+                    catch (Exception ex)
+                    {
+                        var msgDialog = new MessageDialog(ex.ToString());
+                        await msgDialog.ShowAsync();
+                    }
                 }
             }
         }
@@ -838,15 +898,28 @@ namespace MyScript.IInk.Demo
             if (string.IsNullOrEmpty(partType))
                 return;
 
-            var packageName = MakeUntitledFilename();
+            // Close current package
+            _lastSelectedBlock?.Dispose();
+            _lastSelectedBlock = null;
+
+            if (_editor.Part != null)
+            {
+                var part = _editor.Part;
+                var package = part?.Package;
+                _editor.Part = null;
+                part?.Dispose();
+                package?.Dispose();
+            }
 
             // Create package and part
-            _editor.Part = null;
-            var package = _engine.CreatePackage(packageName);
-            var part = package.CreatePart(partType);
-            _editor.Part = part;
-            _packageName = System.IO.Path.GetFileName(packageName);
-            Title.Text = _packageName + " - " + part.Type;
+            {
+                var packageName = MakeUntitledFilename();
+                var package = _engine.CreatePackage(packageName);
+                var part = package.CreatePart(partType);
+                _editor.Part = part;
+                _packageName = System.IO.Path.GetFileName(packageName);
+                Title.Text = _packageName + " - " + part.Type;
+            }
         }
 
         private string MakeUntitledFilename()

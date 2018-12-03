@@ -231,7 +231,8 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         private void BackupData()
         {
-            _previousBlock = _currentBlock;
+            _previousBlock?.Dispose();
+            _previousBlock = _currentBlock?.ShallowCopy();
             _previousWords = CloneWords(_currentWords);
         }
 
@@ -472,8 +473,18 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         public void OnPartChanged()
         {
-            BackupData();
-            _currentBlock = _activeBlock = _selectedBlock = null;
+            _previousBlock?.Dispose();
+            _previousBlock = null;
+
+            _currentBlock?.Dispose();
+            _currentBlock = null;
+
+            _activeBlock?.Dispose();
+            _activeBlock = null;
+
+            _selectedBlock?.Dispose();
+            _selectedBlock = null;
+
             UpdateData();
             ResetWidgets();
         }
@@ -490,7 +501,9 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             // the old instance is invalid but can be restored by remapping the identifier
             if ( (_activeBlock != null) && !_activeBlock.IsValid())
             {
+                _activeBlock?.Dispose();
                 _activeBlock = _editor.GetBlockById(_activeBlock.Id);
+
                 if (_activeBlock == null)
                     ResetWidgets();
             }
@@ -499,7 +512,9 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             {
                 if ((blockIds != null) && blockIds.Contains(_activeBlock.Id))
                 {
-                    _currentBlock = _activeBlock;
+                    _currentBlock?.Dispose();
+                    _currentBlock = _activeBlock?.ShallowCopy();
+
                     BackupData();
                     UpdateData();
                     UpdateWidgets(UpdateCause.Edit);
@@ -509,18 +524,20 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         public void OnSelectionChanged(string[] blockIds)
         {
+            _selectedBlock?.Dispose();
             _selectedBlock = null;
 
             if (blockIds != null)
             {
                 foreach (var blockId in blockIds)
                 {
-                    var block_ = _editor.GetBlockById(blockId);
-
-                    if ( (block_ != null) && (block_.Type == "Text") )
+                    using (var block_ = _editor.GetBlockById(blockId))
                     {
-                        _selectedBlock = block_;
-                        break;
+                        if ((block_ != null) && (block_.Type == "Text"))
+                        {
+                            _selectedBlock = block_?.ShallowCopy();
+                            break;
+                        }
                     }
                 }
             }
@@ -537,7 +554,10 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 if (_selectedBlock != null)
                 {
                     BackupData();
-                    _currentBlock = _selectedBlock;
+
+                    _currentBlock?.Dispose();
+                    _currentBlock = _selectedBlock?.ShallowCopy();
+
                     UpdateData();
                     UpdateWidgets(UpdateCause.Selection);
                 }
@@ -550,13 +570,15 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         public void OnActiveBlockChanged(string blockId)
         {
+            _activeBlock?.Dispose();
             _activeBlock = _editor.GetBlockById(blockId);
 
             if ( (_currentBlock != null) && (_activeBlock != null) && (_currentBlock.Id == _activeBlock.Id) )
                 return; // selectionChanged already changed the active block
 
             BackupData();
-            _currentBlock = _activeBlock;
+            _currentBlock?.Dispose();
+            _currentBlock = _activeBlock?.ShallowCopy();
             UpdateData();
 
             if (_currentBlock != null)
