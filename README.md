@@ -25,11 +25,11 @@ This getting started section has been tested with Visual Studio 2015 and Visual 
 
 ## Building your own integration
 
-In your application add the dependency to `MyScript.InteractiveInk.Uwp` nuget. Also copy `UIReferenceImplementation` directory into your project. More details available in the [developer guide](https://developer.myscript.com/docs/interactive-ink/1.0/windows/).
+In your application add the dependency to `MyScript.InteractiveInk.Uwp` nuget. Also copy `UIReferenceImplementation` directory into your project. More details available in the [developer guide](https://developer.myscript.com/docs/interactive-ink/latest/windows/).
 
 ## Documentation
 
-A complete guide is available on [MyScript Developer website](https://developer.myscript.com/docs/interactive-ink/1.0/windows/).
+A complete guide is available on [MyScript Developer website](https://developer.myscript.com/docs/interactive-ink/latest/windows/).
 
 The API Reference is available in Visual Studio as soon as the Nugets packages are downloaded.
 
