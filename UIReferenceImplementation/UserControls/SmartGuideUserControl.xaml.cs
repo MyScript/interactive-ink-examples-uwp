@@ -387,7 +387,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 Margin = new Thickness(x, y - yOffset, 0, 0);
 
                 TextBlock lastUpdatedItem = null;
-                if (cause == UpdateCause.Edit)
+                if ( (cause == UpdateCause.Edit) || (cause == UpdateCause.Selection) )
                 {
                     // Update text
                     textItem.Children.Clear();
