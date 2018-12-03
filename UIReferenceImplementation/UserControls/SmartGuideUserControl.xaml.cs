@@ -373,14 +373,15 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 var x = topLeft.X;
                 var y = topLeft.Y;
                 var width = topRight.X - topLeft.X;
-                var yOffset =  (ActualHeight > 0) ? ActualHeight : SMART_GUIDE_SIZE; // ActualHeight may be zero if control was collapsed
+                var yOffset = (ActualHeight > 0) ? ActualHeight : SMART_GUIDE_SIZE; // ActualHeight may be zero if control was collapsed
 
                 Width = width;
                 Margin = new Thickness(x, y - yOffset, 0, 0);
 
-                // Update text
                 TextBlock lastUpdatedItem = null;
+                if (cause == UpdateCause.Edit)
                 {
+                    // Update text
                     textItem.Children.Clear();
 
                     foreach (var word in _currentWords)
