@@ -99,6 +99,8 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         private int fadeOutOtherDelay;
         private int removeHighlightDelay;
 
+        private ParameterSet _exportParams;
+
         public Editor Editor
         {
             get { return _editor; }
@@ -182,6 +184,13 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             fadeOutWriteDelay = (int)configuration.GetNumber("smart-guide.fade-out-delay.write", SMART_GUIDE_FADE_OUT_DELAY_WRITE_OTHER_DEFAULT);
             fadeOutOtherDelay = (int)configuration.GetNumber("smart-guide.fade-out-delay.other", SMART_GUIDE_FADE_OUT_DELAY_OTHER_DEFAULT);
             removeHighlightDelay = (int)configuration.GetNumber("smart-guide.highlight-removal-delay", SMART_GUIDE_HIGHLIGHT_REMOVAL_DELAY_DEFAULT);
+
+            _exportParams = _editor.Engine.CreateParameterSet();
+            _exportParams?.SetBoolean("export.jiix.strokes", false);
+            _exportParams?.SetBoolean("export.jiix.bounding-box", false);
+            _exportParams?.SetBoolean("export.jiix.glyphs", false);
+            _exportParams?.SetBoolean("export.jiix.primitives", false);
+            _exportParams?.SetBoolean("export.jiix.chars", false);
         }
 
         private static List<Word> CloneWords(List<Word> from)
@@ -248,9 +257,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
                 try
                 {
-                    var conf = _editor.Engine.CreateParameterSet();
-                    conf.SetBoolean("export.jiix.strokes", false);
-                    jiixStr = _editor.Export_(_currentBlock, MimeType.JIIX, conf);
+                    jiixStr = _editor.Export_(_currentBlock, MimeType.JIIX, _exportParams);
                 }
                 catch
                 {
@@ -819,9 +826,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         {
             try
             {
-                var conf = _editor.Engine.CreateParameterSet();
-                conf.SetBoolean("export.jiix.strokes", false);
-                var jiixStr = _editor.Export_(_currentBlock, MimeType.JIIX, conf);
+                var jiixStr = _editor.Export_(_currentBlock, MimeType.JIIX, _exportParams);
                 var jiix = JsonValue.Parse(jiixStr) as JsonObject;
                 var jiixWords = (JsonArray)jiix["words"];
                 var jiixWord = (JsonObject)jiixWords[command.WordIndex];
