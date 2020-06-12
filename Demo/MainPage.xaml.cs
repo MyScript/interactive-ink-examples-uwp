@@ -336,6 +336,7 @@ namespace MyScript.IInk.Demo
             {
                 var part = _editor.Part;
                 var package = part?.Package;
+                package?.Save();
                 _editor.Part = null;
                 part?.Dispose();
                 package?.Dispose();
@@ -941,6 +942,7 @@ namespace MyScript.IInk.Demo
             {
                 var part = _editor.Part;
                 var package = part?.Package;
+                package?.Save();
                 _editor.Part = null;
                 part?.Dispose();
                 package?.Dispose();
@@ -960,16 +962,20 @@ namespace MyScript.IInk.Demo
         private string MakeUntitledFilename()
         {
             var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
-            string name;
+            var tempFolder = _engine.Configuration.GetString("content-package.temp-folder");
+            string fileName;
+            string folderName;
 
             do
             {
                 var baseName = "File" + (++_filenameIndex) + ".iink";
-                name = System.IO.Path.Combine(localFolder, baseName);
+                fileName = System.IO.Path.Combine(localFolder, baseName);
+                var tempName = baseName + "-file";
+                folderName = System.IO.Path.Combine(tempFolder, tempName);
             }
-            while (System.IO.File.Exists(name));
+            while (System.IO.File.Exists(fileName) || System.IO.File.Exists(folderName));
 
-            return name;
+            return fileName;
         }
 
 
