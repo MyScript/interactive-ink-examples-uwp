@@ -1,4 +1,4 @@
-﻿// Copyright MyScript. All right reserved.
+// Copyright MyScript. All right reserved.
 
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -525,10 +525,10 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
             if (properties.IsHorizontalMouseWheel == false)
             {
-                var WHEEL_DELTA = 120;  // TODO : get from system ?
+                var WHEEL_DELTA = 120;
 
                 var controlDown = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
-                var shiftDown = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Shif‌​t).HasFlag(CoreVirtualKeyStates.Down);
+                var shiftDown = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
                 var wheelDelta = properties.MouseWheelDelta / WHEEL_DELTA;
 
                 if (controlDown)
@@ -540,7 +540,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 }
                 else
                 {
-                    var SCROLL_SPEED = 10;
+                    var SCROLL_SPEED = 100;
                     var delta = (float)(-SCROLL_SPEED * wheelDelta);
                     var deltaX = shiftDown ? delta : 0.0f;
                     var deltaY = shiftDown ? 0.0f : delta;
