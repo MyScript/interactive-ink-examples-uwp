@@ -4,13 +4,15 @@ using MyScript.IInk.UIReferenceImplementation;
 using MyScript.IInk.UIReferenceImplementation.UserControls;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Windows.Storage;
+using Windows.System;
+using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using System.IO;
 
 namespace MyScript.IInk.Demo
 {
@@ -61,6 +63,8 @@ namespace MyScript.IInk.Demo
 
             Loaded += UcEditor.UserControl_Loaded;
             Loaded += Page_Loaded;
+
+            KeyDown +=  Page_KeyDown;
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
@@ -85,6 +89,37 @@ namespace MyScript.IInk.Demo
             SetInputMode(InputMode.PEN);
 
             NewFile();
+        }
+
+        private void Page_KeyDown(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
+        {
+            var ctrlKey = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control);
+            var shftKey = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift);
+
+            var ctrl = ctrlKey.HasFlag(CoreVirtualKeyStates.Down);
+            var shft = shftKey.HasFlag(CoreVirtualKeyStates.Down);
+
+            if (e.Key == VirtualKey.Z)
+            {
+                if (ctrl)
+                {
+                    if (shft)
+                        _editor.Redo();
+                    else
+                        _editor.Undo();
+
+                    e.Handled = true;
+                }
+            }
+            else
+            if (e.Key == VirtualKey.Y)
+            {
+                if (ctrl && !shft)
+                {
+                    _editor.Redo();
+                    e.Handled = true;
+                }
+            }
         }
 
         private void SetInputMode(InputMode inputMode)

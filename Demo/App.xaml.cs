@@ -1,4 +1,4 @@
-﻿// Copyright MyScript. All right reserved.
+// Copyright MyScript. All right reserved.
 
 using System;
 using Windows.ApplicationModel;
@@ -59,7 +59,7 @@ namespace MyScript.IInk.Demo
                 rootFrame = new Frame();
 
                 rootFrame.NavigationFailed += OnNavigationFailed;
-                
+
                 Window.Current.Content = rootFrame;
             }
 
