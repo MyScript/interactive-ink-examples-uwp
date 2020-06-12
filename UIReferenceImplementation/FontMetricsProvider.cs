@@ -104,10 +104,11 @@ namespace MyScript.IInk.UIReferenceImplementation
                     FontSize = fontKey.FontSize,
                     FontFamily = fontKey.FontFamily,
                     FontStyle = fontKey.FontStyle,
-                    FontWeight = fontKey.FontWeight
+                    FontWeight = fontKey.FontWeight,
+                    WordWrapping = CanvasWordWrapping.NoWrap
                 };
 
-                using (var canvasCharLayout = new CanvasTextLayout(canvasDevice, glyphLabel, textFormat, 10000, 10000))
+                using (var canvasCharLayout = new CanvasTextLayout(canvasDevice, glyphLabel, textFormat, 0.0f, 0.0f))
                 {
                     canvasCharLayout.SetFontFamily(0, 1, fontKey.FontFamily);
                     canvasCharLayout.SetFontSize(0, 1, fontKey.FontSize);
@@ -178,10 +179,11 @@ namespace MyScript.IInk.UIReferenceImplementation
                     FontSize = firstFontKey.FontSize,
                     FontFamily = firstFontKey.FontFamily,
                     FontStyle = firstFontKey.FontStyle,
-                    FontWeight = firstFontKey.FontWeight
+                    FontWeight = firstFontKey.FontWeight,
+                    WordWrapping = CanvasWordWrapping.NoWrap
                 };
 
-                using (var canvasTextLayout = new CanvasTextLayout(canvasDevice, text.Label, textFormat, 10000, 10000))
+                using (var canvasTextLayout = new CanvasTextLayout(canvasDevice, text.Label, textFormat, 0.0f, 0.0f))
                 {
                     for (int i = 0; i < spans.Length; ++i)
                     {
