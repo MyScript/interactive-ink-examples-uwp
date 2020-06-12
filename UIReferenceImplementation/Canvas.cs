@@ -321,16 +321,7 @@ namespace MyScript.IInk.UIReferenceImplementation
             var screenMin = transform.Apply(x, y);
             var screenMax = transform.Apply(x + width, y + height);
 
-            var image = _imageLoader.getImage(  url, mimeType,
-                                                (url_, image_) =>
-                                                {
-                                                    var renderer = _imageLoader.Editor.Renderer;
-                                                    var x_ = (int)Math.Floor(screenMin.X);
-                                                    var y_ = (int)Math.Floor(screenMin.Y);
-                                                    var width_ = (int)Math.Ceiling(screenMax.X) - x_;
-                                                    var height_ = (int)Math.Ceiling(screenMax.Y) - y_;
-                                                    _target.Invalidate(renderer, x_, y_, width_, height_, LayerType.LayerType_ALL);
-                                                } );
+            var image = _imageLoader.getImage(url, mimeType);
 
             if (image == null)
             {
