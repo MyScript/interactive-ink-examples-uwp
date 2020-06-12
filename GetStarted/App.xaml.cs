@@ -1,4 +1,4 @@
-﻿// Copyright MyScript. All right reserved.
+// Copyright MyScript. All right reserved.
 
 using System;
 using Windows.ApplicationModel;

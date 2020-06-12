@@ -1,4 +1,4 @@
-﻿// Copyright MyScript. All right reserved.
+// Copyright MyScript. All right reserved.
 
 using MyScript.IInk.UIReferenceImplementation.UserControls;
 using System;
@@ -11,7 +11,7 @@ namespace MyScript.IInk.GetStarted
 {
     public sealed partial class MainPage : Page
     {
-        // Defines the type of content (possible values are: "Text Document", "Text", "Diagram", "Math", and "Drawing")
+        // Defines the type of content (possible values are: "Text Document", "Text", "Diagram", "Math", "Drawing" and "Raw Content")
         private const string PartType = "Text Document";
 
         private Engine _engine;
