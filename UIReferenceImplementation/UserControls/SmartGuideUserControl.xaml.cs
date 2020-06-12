@@ -514,8 +514,9 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             // the old instance is invalid but can be restored by remapping the identifier
             if ( (_activeBlock != null) && !_activeBlock.IsValid())
             {
+                var activeBlockId = _activeBlock.Id;
                 _activeBlock?.Dispose();
-                _activeBlock = _editor.GetBlockById(_activeBlock.Id);
+                _activeBlock = _editor.GetBlockById(activeBlockId);
 
                 if (_activeBlock == null)
                     ResetWidgets();
