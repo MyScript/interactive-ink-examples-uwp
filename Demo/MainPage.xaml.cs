@@ -1,4 +1,4 @@
-﻿// Copyright MyScript. All right reserved.
+// Copyright MyScript. All right reserved.
 
 using MyScript.IInk.UIReferenceImplementation;
 using MyScript.IInk.UIReferenceImplementation.UserControls;
@@ -465,8 +465,8 @@ namespace MyScript.IInk.Demo
                 var displayAddBlock = hasTypes && isRoot;
                 var displayAddImage = false; // hasTypes && isRoot;
                 var displayRemove   = !isRoot;
-                var displayCopy     = (onTextDocument ? !isRoot : !onRawContent);
-                var displayPaste    = hasTypes && isRoot;
+                var displayCopy     = !onTextDocument || !isRoot;
+                var displayPaste    = isRoot;
                 var displayImport   = hasImports;
                 var displayExport   = hasExports;
                 var displayClipboard = hasExports && supportedExports.Contains(MimeType.OFFICE_CLIPBOARD);
