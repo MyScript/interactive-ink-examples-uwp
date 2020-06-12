@@ -348,10 +348,18 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             _pointerId = -1;
         }
 
+        private bool HasPart()
+        {
+            return (_editor != null) && (_editor.Part != null);
+        }
+
         private void Capture_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
             var uiElement = sender as UIElement;
             var p = e.GetCurrentPoint(uiElement);
+
+            if (!HasPart())
+                return;
 
             if (_pointerId != -1)
                 return;
@@ -378,6 +386,9 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         {
             var uiElement = sender as UIElement;
             var p = e.GetCurrentPoint(uiElement);
+
+            if (!HasPart())
+                return;
 
             if (_pointerId != (int)e.Pointer.PointerId)
                 return;
@@ -431,6 +442,9 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             var uiElement = sender as UIElement;
             var p = e.GetCurrentPoint(uiElement);
 
+            if (!HasPart())
+                return;
+
             if (_pointerId != (int)e.Pointer.PointerId)
                 return;
 
@@ -471,6 +485,9 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             var uiElement = sender as UIElement;
             var p = e.GetCurrentPoint(uiElement);
 
+            if (!HasPart())
+                return;
+
             if (_pointerId != (int)e.Pointer.PointerId)
                 return;
 
@@ -502,6 +519,9 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         {
             var uiElement = captureCanvas; //sender as UIElement;
             var properties = e.GetCurrentPoint(uiElement).Properties;
+
+            if (!HasPart())
+                return;
 
             if (properties.IsHorizontalMouseWheel == false)
             {
