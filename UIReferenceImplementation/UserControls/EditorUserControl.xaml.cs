@@ -123,9 +123,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         public ImageLoader ImageLoader => _loader;
         public SmartGuideUserControl SmartGuide => smartGuide;
 
-        private Layer _backgroundLayer;
         private Layer _modelLayer;
-        private Layer _temporaryLayer;
         private Layer _captureLayer;
 
         public bool SmartGuideEnabled
@@ -188,9 +186,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             _renderer = _engine.CreateRenderer(dpiX, dpiY, this);
             _renderer.AddListener(new RendererListener(this));
 
-            _backgroundLayer = new Layer(backgroundCanvas, this, LayerType.BACKGROUND, _renderer);
             _modelLayer = new Layer(modelCanvas, this, LayerType.MODEL, _renderer);
-            _temporaryLayer = new Layer(tempCanvas, this, LayerType.TEMPORARY, _renderer);
             _captureLayer = new Layer(captureCanvas, this, LayerType.CAPTURE, _renderer);
 
             _editor = _engine.CreateEditor(_renderer);
@@ -203,10 +199,8 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             var tempFolder = _engine.Configuration.GetString("content-package.temp-folder");
             _loader = new ImageLoader(_editor, tempFolder);
 
-            _backgroundLayer.ImageLoader = _loader;
             _modelLayer.ImageLoader = _loader;
             _captureLayer.ImageLoader = _loader;
-            _temporaryLayer.ImageLoader = _loader;
 
             float verticalMarginPX = 60;
             float horizontalMarginPX = 40;
@@ -230,12 +224,9 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         /// <summary>Force inks layer to be redrawn</summary>
         public void Invalidate(Renderer renderer, LayerType layers)
         {
-            if ((layers & LayerType.BACKGROUND) != 0)
-                _backgroundLayer.Update();
             if ((layers & LayerType.MODEL) != 0)
                 _modelLayer.Update();
-            if ((layers & LayerType.TEMPORARY) != 0)
-                _temporaryLayer.Update();
+
             if ((layers & LayerType.CAPTURE) != 0)
                 _captureLayer.Update();
         }
@@ -245,12 +236,10 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         {
             if (height < 0)
                 return;
-            if ((layers & LayerType.BACKGROUND) != 0)
-                _backgroundLayer.Update(x, y, width, height);
+
             if ((layers & LayerType.MODEL) != 0)
                 _modelLayer.Update(x, y, width, height);
-            if ((layers & LayerType.TEMPORARY) != 0)
-                _temporaryLayer.Update(x, y, width, height);
+
             if ((layers & LayerType.CAPTURE) != 0)
                 _captureLayer.Update(x, y, width, height);
         }
@@ -296,12 +285,8 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
                     if (sender == captureCanvas)
                         _captureLayer.OnPaint(x, y, width, height);
-                    else if (sender == tempCanvas)
-                        _temporaryLayer.OnPaint(x, y, width, height);
                     else if (sender == modelCanvas)
                         _modelLayer.OnPaint(x, y, width, height);
-                    else if (sender == backgroundCanvas)
-                        _backgroundLayer.OnPaint(x, y, width, height);
                 }
             }
         }

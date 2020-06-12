@@ -1,4 +1,4 @@
-﻿// Copyright MyScript. All right reserved.
+// Copyright MyScript. All right reserved.
 
 using MyScript.IInk.Graphics;
 using Microsoft.Graphics.Canvas.UI.Xaml;
@@ -72,21 +72,9 @@ namespace MyScript.IInk.UIReferenceImplementation
 
                 switch (Type)
                 {
-                    case LayerType.BACKGROUND:
-                        canvas.Begin();
-                        _renderer.DrawBackground(x, y, width, height, canvas);
-                        canvas.End();
-                        break;
-
                     case LayerType.MODEL:
                         canvas.Begin();
                         _renderer.DrawModel(x, y, width, height, canvas);
-                        canvas.End();
-                        break;
-
-                    case LayerType.TEMPORARY:
-                        canvas.Begin();
-                        _renderer.DrawTemporaryItems(x, y, width, height, canvas);
                         canvas.End();
                         break;
 
