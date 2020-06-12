@@ -170,7 +170,7 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         public void SetFontProperties(string family, float lineHeight, float size, string style, string variant, int weight)
         {
-            _fontProperties.FontFamily = family;
+            _fontProperties.FontFamily = FontMetricsProvider.toPlatformFontFamily(family, style);
 
             switch (style)
             {

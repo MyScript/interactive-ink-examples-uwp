@@ -1,4 +1,4 @@
-﻿// Copyright MyScript. All right reserved.
+// Copyright MyScript. All right reserved.
 
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
@@ -19,6 +19,16 @@ namespace MyScript.IInk.UIReferenceImplementation
         {
             this.dpiX = dpiX;
             this.dpiY = dpiY;
+        }
+
+        public static string toPlatformFontFamily(string family, string style)
+        {
+            var family_ = family;
+            if (family_ == "sans-serif")
+                family_ = "Segoe UI";
+            else if (family_ == "STIXGeneral" && style == "italic")
+                family_ = "STIX";
+            return family_;
         }
 
         private static float px2mm(float px, float dpi)
@@ -64,6 +74,7 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         private FontKey FontKeyFromStyle(Style style)
         {
+            var fontFamily = toPlatformFontFamily(style.FontFamily, style.FontStyle);
             var fontSize = mm2px(style.FontSize, dpiY);
             var fontWeight = new Windows.UI.Text.FontWeight() {  Weight = (ushort)style.FontWeight };
             var fontStyle = Windows.UI.Text.FontStyle.Normal;
@@ -73,7 +84,7 @@ namespace MyScript.IInk.UIReferenceImplementation
             else if (style.FontStyle == "oblique")
                 fontStyle = Windows.UI.Text.FontStyle.Oblique;
 
-            return new FontKey(style.FontFamily, fontSize, fontWeight, fontStyle);
+            return new FontKey(fontFamily, fontSize, fontWeight, fontStyle);
         }
 
         private GlyphMetrics GetGlyphMetrics(FontKey fontKey, string glyphLabel, CanvasDevice canvasDevice)
@@ -164,8 +175,8 @@ namespace MyScript.IInk.UIReferenceImplementation
             {
                 var textFormat = new CanvasTextFormat()
                 {
-                    FontSize = mm2px(firstStyle.FontSize, dpiY),
-                    FontFamily = firstStyle.FontFamily,
+                    FontSize = firstFontKey.FontSize,
+                    FontFamily = firstFontKey.FontFamily,
                     FontStyle = firstFontKey.FontStyle,
                     FontWeight = firstFontKey.FontWeight
                 };
