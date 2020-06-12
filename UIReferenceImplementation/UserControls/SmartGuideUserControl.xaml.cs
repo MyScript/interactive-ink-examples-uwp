@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Json;
 using System.Linq;
@@ -186,6 +186,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             removeHighlightDelay = (int)configuration.GetNumber("smart-guide.highlight-removal-delay", SMART_GUIDE_HIGHLIGHT_REMOVAL_DELAY_DEFAULT);
 
             _exportParams = _editor.Engine.CreateParameterSet();
+            _exportParams?.SetBoolean("export.jiix.text.words", true);
             _exportParams?.SetBoolean("export.jiix.strokes", false);
             _exportParams?.SetBoolean("export.jiix.bounding-box", false);
             _exportParams?.SetBoolean("export.jiix.glyphs", false);
@@ -273,6 +274,11 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                     var jiixWord = (JsonObject)jiixWord_;
 
                     var label = (string)jiixWord["label"];
+
+
+                    // in smart guide, we want everything on the same line, so we override the label with the reflow label
+                    if (jiixWord.ContainsKey("reflow-label"))
+                        label = (string)jiixWord["reflow-label"];
 
                     var candidates = new List<string>();
                     JsonValue jiixCandidates_;
