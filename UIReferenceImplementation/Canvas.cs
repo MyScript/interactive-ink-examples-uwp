@@ -1,6 +1,7 @@
-﻿// Copyright MyScript. All right reserved.
+// Copyright MyScript. All right reserved.
 
 using MyScript.IInk.Graphics;
+using MyScript.IInk.UIReferenceImplementation.UserControls;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.Text;
@@ -11,7 +12,7 @@ using Windows.Foundation;
 
 namespace MyScript.IInk.UIReferenceImplementation
 {
-    public class Canvas : ICanvas
+    public class Canvas : ICanvas2
     {
         private CanvasDrawingSession _session;
         private IRenderTarget _target;
@@ -29,6 +30,7 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         private CanvasActiveLayer _activeLayer;
         private Rect _activeLayerRect;
+        private CanvasActiveLayer _drawingLayer;
 
         public Canvas(CanvasDrawingSession session, IRenderTarget target, ImageLoader imageLoader)
         {
@@ -63,6 +65,16 @@ namespace MyScript.IInk.UIReferenceImplementation
             _layers = new Dictionary<string, Rect>();
             _activeLayer = null;
             _activeLayerRect = Rect.Empty;
+            _drawingLayer = null;
+        }
+
+        public void DisposeSession()
+        {
+            if (_session != null)
+            {
+                _session.Dispose();
+                _session = null;
+            }
         }
 
         public void Begin()
@@ -362,5 +374,48 @@ namespace MyScript.IInk.UIReferenceImplementation
                 _session.DrawText(label, x, y - _baseline, _fillColor, _fontProperties);
             }
         }
-    };
+
+
+        public void StartDraw(int x, int y, int width, int height)
+        {
+            Begin();
+
+            EditorUserControl editor = _target as EditorUserControl;
+            if (editor?.SupportsOffscreenRendering() ?? false)
+            {
+                var drawingLayerRect = new Rect(x, y, width, height);
+                _drawingLayer = _session.CreateLayer(1.0f, drawingLayerRect);
+                var color = Windows.UI.Color.FromArgb((byte)0, (byte)0, (byte)0, (byte)0);
+                _session.Clear(color);
+            }
+        }
+
+        public void EndDraw()
+        {
+            End();
+
+            if (_drawingLayer != null)
+            {
+                _drawingLayer.Dispose();
+                _drawingLayer = null;
+            }
+        }
+
+        public void BlendOffscreen(UInt32 id,
+            float  src_x, float  src_y, float  src_width, float  src_height,
+            float dest_x, float dest_y, float dest_width, float dest_height,
+            Color color)
+        {
+            EditorUserControl editor = _target as EditorUserControl;
+            if (editor?.SupportsOffscreenRendering() ?? false)
+            {
+                CanvasRenderTarget bitmap = editor.GetImage(id);
+
+                Rect srcRect = new Rect( src_x,  src_y,  src_width,  src_height);
+                Rect dstRect = new Rect(dest_x, dest_y, dest_width, dest_height);
+
+                _session.DrawImage(bitmap, dstRect, srcRect, color.A_f);
+            }
+        }
+    }
 }

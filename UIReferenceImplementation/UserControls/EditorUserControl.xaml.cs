@@ -8,6 +8,9 @@ using Windows.UI.Core;
 using Windows.System;
 using Windows.Graphics.Display;
 using Windows.UI.Popups;
+using MyScript.IInk.Graphics;
+using System.Collections.Generic;
+using Microsoft.Graphics.Canvas;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 namespace MyScript.IInk.UIReferenceImplementation.UserControls
@@ -96,7 +99,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
     }
 
 
-    public sealed partial class EditorUserControl : UserControl, IRenderTarget
+    public sealed partial class EditorUserControl : UserControl, IRenderTarget2
     {
         private Engine _engine;
         private Editor _editor;
@@ -125,6 +128,12 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         private Layer _modelLayer;
         private Layer _captureLayer;
+
+        // Offscreen rendering
+        private float _dpiX = 96;
+        private float _pixelDensity = 1.0f;
+        private uint _nextOffscreenRenderId = 0;
+        private IDictionary<uint, CanvasRenderTarget> _bitmaps = new Dictionary<uint, CanvasRenderTarget>();
 
         public bool SmartGuideEnabled
         {
@@ -163,27 +172,26 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         private void Initialize()
         {
             var info = DisplayInformation.GetForCurrentView();
-            var dpiX = info.RawDpiX;
+            _dpiX = info.RawDpiX;
             var dpiY = info.RawDpiY;
-            var scale = 1.0f;
             
             if (info.RawPixelsPerViewPixel > 0.0)
-                scale = (float)info.RawPixelsPerViewPixel;
+                _pixelDensity = (float)info.RawPixelsPerViewPixel;
             else if (info.ResolutionScale != ResolutionScale.Invalid)
-                scale = (float)info.ResolutionScale / 100.0f;
+                _pixelDensity = (float)info.ResolutionScale / 100.0f;
 
-            if (scale > 0.0f)
+            if (_pixelDensity > 0.0f)
             {
-                dpiX /= scale;
-                dpiY /= scale;
+                _dpiX /= _pixelDensity;
+                dpiY /= _pixelDensity;
             }
 
-            // RawDpi properties can return 0 when the monitor doesn't provide physical dimensions and when the user is
+            // RawDpi properties can return 0 when the monitor does not provide physical dimensions and when the user is
             // in a clone or duplicate multiple -monitor setup.
-            if (dpiX == 0 || dpiY == 0)
-                dpiX = dpiY = 96;
+            if (_dpiX == 0 || dpiY == 0)
+                _dpiX = dpiY = 96;
 
-            _renderer = _engine.CreateRenderer(dpiX, dpiY, this);
+            _renderer = _engine.CreateRenderer(_dpiX, dpiY, this);
             _renderer.AddListener(new RendererListener(this));
 
             _modelLayer = new Layer(modelCanvas, this, LayerType.MODEL, _renderer);
@@ -191,7 +199,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
             _editor = _engine.CreateEditor(_renderer);
             _editor.SetViewSize((int)ActualWidth, (int)ActualHeight);
-            _editor.SetFontMetricsProvider(new FontMetricsProvider(dpiX, dpiY));
+            _editor.SetFontMetricsProvider(new FontMetricsProvider(_dpiX, dpiY));
             _editor.AddListener(new EditorListener(this));
 
             smartGuide.Editor = _editor;
@@ -205,7 +213,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             float verticalMarginPX = 60;
             float horizontalMarginPX = 40;
             var verticalMarginMM = 25.4f * verticalMarginPX / dpiY;
-            var horizontalMarginMM = 25.4f * horizontalMarginPX / dpiX;
+            var horizontalMarginMM = 25.4f * horizontalMarginPX / _dpiX;
             _engine.Configuration.SetNumber("text.margin.top", verticalMarginMM);
             _engine.Configuration.SetNumber("text.margin.left", horizontalMarginMM);
             _engine.Configuration.SetNumber("text.margin.right", horizontalMarginMM);
@@ -243,6 +251,64 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             if ((layers & LayerType.CAPTURE) != 0)
                 _captureLayer.Update(x, y, width, height);
         }
+
+        public bool SupportsOffscreenRendering()
+        {
+            return true;
+        }
+        public float GetPixelDensity()
+        {
+            return _pixelDensity;
+        }
+
+        public uint CreateOffscreenRenderSurface(int width, int height, bool alphaMask)
+        {
+            // Use DPI 96 to specify 1:1 dip <-> pixel mapping
+            CanvasDevice device = CanvasDevice.GetSharedDevice();
+            CanvasRenderTarget offscreen = new CanvasRenderTarget(device, width, height, 96);
+
+            uint offscreenRenderId = _nextOffscreenRenderId++;
+            _bitmaps.Add(offscreenRenderId, offscreen);
+            return offscreenRenderId;
+        }
+
+        public void ReleaseOffscreenRenderSurface(uint surfaceId)
+        {
+            CanvasRenderTarget offscreen;
+            if (!_bitmaps.TryGetValue(surfaceId, out offscreen))
+                throw new System.NullReferenceException();
+
+            _bitmaps.Remove(surfaceId);
+            offscreen.Dispose();
+        }
+
+        public ICanvas CreateOffscreenRenderCanvas(uint offscreenID)
+        {
+            CanvasRenderTarget offscreen;
+            if ( !_bitmaps.TryGetValue(offscreenID, out offscreen) )
+                throw new System.NullReferenceException();
+
+            return new Canvas(offscreen.CreateDrawingSession(), this, _loader);
+        }
+
+        public void ReleaseOffscreenRenderCanvas(ICanvas canvas)
+        {
+            // The previously created DrawingSession (in CreateOffscreenRenderCanvas) must be disposed
+            // before we can ask the offscreen surface (CanvasRenderTarget) to recreate a new one.
+            // So, we ask the canvas to dispose and set to null its DrawingSession; the canvas should be destroyed soon after.
+            Canvas canvas_ = (Canvas)canvas;
+            canvas_.DisposeSession();
+        }
+
+        public CanvasRenderTarget GetImage(uint offscreenID)
+        {
+            CanvasRenderTarget offscreen;
+            if ( !_bitmaps.TryGetValue(offscreenID, out offscreen) )
+                throw new System.NullReferenceException();
+
+            return offscreen;
+        }
+
 
         private void EnableSmartGuide(bool enable)
         {
