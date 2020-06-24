@@ -480,8 +480,22 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             }
             else
             {
-                // Send pointer move event to the editor
-                _editor.PointerMove((float)p.Position.X, (float)p.Position.Y, GetTimestamp(p), p.Properties.Pressure, pointerType, GetPointerId(e));
+                var pointList = e.GetIntermediatePoints(uiElement);
+                if (pointList.Count > 0)
+                {
+                    var events = new PointerEvent[pointList.Count];
+
+                    // Intermediate points are stored in reverse order:
+                    // Revert the list and send the pointer events all at once
+                    int j = 0;
+                    for (int i = pointList.Count - 1; i >= 0; i--)
+                    {
+                        var p_ = pointList[i];
+                        events[j++] = new PointerEvent(PointerEventType.MOVE, (float)p_.Position.X, (float)p_.Position.Y, GetTimestamp(p_), p_.Properties.Pressure, pointerType, GetPointerId(e));
+                    }
+
+                    _editor.PointerEvents(events);
+                }
             }
 
             // Prevent most handlers along the event route from handling the same event again.
