@@ -389,7 +389,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 var width = topRight.X - topLeft.X;
                 var yOffset = (ActualHeight > 0) ? ActualHeight : SMART_GUIDE_SIZE; // ActualHeight may be zero if control was collapsed
 
-                Width = width;
+                Width = Math.Max(width, 3 * SMART_GUIDE_SIZE);
                 Margin = new Thickness(x, y - yOffset, 0, 0);
 
                 TextBlock lastUpdatedItem = null;
