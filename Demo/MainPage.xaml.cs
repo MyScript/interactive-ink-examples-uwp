@@ -208,18 +208,30 @@ namespace MyScript.IInk.Demo
                 // Reset viewing parameters
                 UcEditor.ResetView(false);
 
-                // Create package and part
-                var package = _editor.Part.Package;
-
                 _lastSelectedBlock?.Dispose();
                 _lastSelectedBlock = null;
 
-                _editor.Part.Dispose();
-                _editor.Part = null;
+                var previousPart = _editor.Part;
+                var package = previousPart.Package;
 
-                var part = package.CreatePart(partType);
-                _editor.Part = part;
-                Title.Text = _packageName + " - " + part.Type;
+                try
+                {
+                    _editor.Part = null;
+
+                    var part = package.CreatePart(partType);
+                    _editor.Part = part;
+                    Title.Text = _packageName + " - " + part.Type;
+
+                    previousPart.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    _editor.Part = previousPart;
+                    Title.Text = _packageName + " - " + _editor.Part.Type;
+
+                    var msgDialog = new MessageDialog(ex.ToString());
+                    await msgDialog.ShowAsync();
+                }
             }
         }
 
@@ -229,24 +241,46 @@ namespace MyScript.IInk.Demo
 
             if (part != null)
             {
-                var index = part.Package.IndexOfPart(part);
+                var package = part.Package;
+                var index = package.IndexOfPart(part);
 
                 if (index > 0)
                 {
                     // Reset viewing parameters
                     UcEditor.ResetView(false);
 
-                    // Select new part
                     _lastSelectedBlock?.Dispose();
                     _lastSelectedBlock = null;
-
                     _editor.Part = null;
 
-                    var newPart = part.Package.GetPart(index - 1);
-                    _editor.Part = newPart;
-                    Title.Text = _packageName + " - " + newPart.Type;
+                    while (--index >= 0)
+                    {
+                        ContentPart newPart = null;
 
-                    part.Dispose();
+                        try
+                        {
+                            // Select new part
+                            newPart = part.Package.GetPart(index);
+                            _editor.Part = newPart;
+                            Title.Text = _packageName + " - " + newPart.Type;
+                            part.Dispose();
+                            break;
+                        }
+                        catch
+                        {
+                            // Can't set this part, try the previous one
+                            _editor.Part = null;
+                            Title.Text = "";
+                            newPart?.Dispose();
+                        }
+                    }
+
+                    if (index < 0)
+                    {
+                        // Restore current part if none can be set
+                        _editor.Part = part;
+                        Title.Text = _packageName + " - " + part.Type;
+                    }
                 }
             }
         }
@@ -257,27 +291,51 @@ namespace MyScript.IInk.Demo
 
             if (part != null)
             {
-                var index = part.Package.IndexOfPart(part);
+                var package = part.Package;
+                var count = package.PartCount;
+                var index = package.IndexOfPart(part);
 
-                if (index < part.Package.PartCount - 1)
+                if (index < count - 1)
                 {
                     // Reset viewing parameters
                     UcEditor.ResetView(false);
 
-                    // Select new part
                     _lastSelectedBlock?.Dispose();
                     _lastSelectedBlock = null;
-
                     _editor.Part = null;
 
-                    var newPart = part.Package.GetPart(index + 1);
-                    _editor.Part = newPart;
-                    Title.Text = _packageName + " - " + newPart.Type;
+                    while (++index < count)
+                    {
+                        ContentPart newPart = null;
 
-                    part.Dispose();
+                        try
+                        {
+                            // Select new part
+                            newPart = part.Package.GetPart(index);
+                            _editor.Part = newPart;
+                            Title.Text = _packageName + " - " + newPart.Type;
+                            part.Dispose();
+                            break;
+                        }
+                        catch
+                        {
+                            // Can't set this part, try the next one
+                            _editor.Part = null;
+                            Title.Text = "";
+                            newPart?.Dispose();
+                        }
+                    }
+
+                    if (index >= count)
+                    {
+                        // Restore current part if none can be set
+                        _editor.Part = part;
+                        Title.Text = _packageName + " - " + part.Type;
+                    }
                 }
             }
         }
+
         private void AppBar_ResetViewButton_Click(object sender, RoutedEventArgs e)
         {
             UcEditor.ResetView(true);
@@ -328,38 +386,47 @@ namespace MyScript.IInk.Demo
             var fileName = fileList.SelectedValue.ToString();
             var filePath = System.IO.Path.Combine(localFolder.Path.ToString(), fileName);
 
-            // Close current package
             _lastSelectedBlock?.Dispose();
             _lastSelectedBlock = null;
-
-            if (_editor.Part != null)
-            {
-                var part = _editor.Part;
-                var package = part?.Package;
-                package?.Save();
-                _editor.Part = null;
-                part?.Dispose();
-                package?.Dispose();
-            }
 
             // Reset viewing parameters
             UcEditor.ResetView(false);
 
-            // Open package and select first part
+            try
             {
+                // Save and close current package
+                SavePackage();
+                ClosePackage();
+
+                // Open package and select first part
                 var package = _engine.OpenPackage(filePath);
                 var part = package.GetPart(0);
                 _editor.Part = part;
                 _packageName = fileName;
                 Title.Text = _packageName + " - " + part.Type;
             }
+            catch (Exception ex)
+            {
+                ClosePackage();
+
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
         }
 
-        private void AppBar_SavePackageButton_Click(object sender, RoutedEventArgs e)
+        private async void AppBar_SavePackageButton_Click(object sender, RoutedEventArgs e)
         {
-            var part = _editor.Part;
-
-            part?.Package.Save();
+            try
+            {
+                var part = _editor.Part;
+                var package = part?.Package;
+                package?.Save();
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
         }
 
         private async void AppBar_SaveAsButton_Click(object sender, RoutedEventArgs e)
@@ -416,18 +483,24 @@ namespace MyScript.IInk.Demo
                 filePath = System.IO.Path.Combine(localFolder.Path.ToString(), fileName);
             }
 
-            // Get current package
             var part = _editor.Part;
-            if (part == null)
-                return;
-            var package = part.Package;
+            if (part != null)
+            {
+                try
+                {
+                    // Save Package with new name
+                    part.Package.SaveAs(filePath);
 
-            // Save Package with new name
-            package.SaveAs(filePath);
-
-            // Update internals
-            _packageName = fileName;
-            Title.Text = _packageName + " - " + part.Type;
+                    // Update internals
+                    _packageName = fileName;
+                    Title.Text = _packageName + " - " + part.Type;
+                }
+                catch (Exception ex)
+                {
+                    var msgDialog = new MessageDialog(ex.ToString());
+                    await msgDialog.ShowAsync();
+                }
+            }
         }
 
         private void DisplayContextualMenu(Windows.Foundation.Point globalPos)
@@ -723,7 +796,6 @@ namespace MyScript.IInk.Demo
                 var msgDialog = new MessageDialog(ex.ToString());
                 await msgDialog.ShowAsync();
             }
-
         }
 
         private void Popup_CommandHandler_AddImage(FlyoutCommand command)
@@ -927,6 +999,23 @@ namespace MyScript.IInk.Demo
             }
         }
 
+        private void SavePackage()
+        {
+            var part = _editor.Part;
+            var package = part?.Package;
+            package?.Save();
+        }
+
+        private void ClosePackage()
+        {
+            var part = _editor.Part;
+            var package = part?.Package;
+            _editor.Part = null;
+            part?.Dispose();
+            package?.Dispose();
+            Title.Text = "";
+        }
+
         private async void NewFile()
         {
             var cancelable = _editor.Part != null;
@@ -934,28 +1023,29 @@ namespace MyScript.IInk.Demo
             if (string.IsNullOrEmpty(partType))
                 return;
 
-            // Close current package
             _lastSelectedBlock?.Dispose();
             _lastSelectedBlock = null;
 
-            if (_editor.Part != null)
+            try
             {
-                var part = _editor.Part;
-                var package = part?.Package;
-                package?.Save();
-                _editor.Part = null;
-                part?.Dispose();
-                package?.Dispose();
-            }
+                // Save and close current package
+                SavePackage();
+                ClosePackage();
 
-            // Create package and part
-            {
+                // Create package and part
                 var packageName = MakeUntitledFilename();
                 var package = _engine.CreatePackage(packageName);
                 var part = package.CreatePart(partType);
                 _editor.Part = part;
                 _packageName = System.IO.Path.GetFileName(packageName);
                 Title.Text = _packageName + " - " + part.Type;
+            }
+            catch (Exception ex)
+            {
+                ClosePackage();
+
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
             }
         }
 

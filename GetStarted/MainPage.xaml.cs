@@ -3,6 +3,7 @@
 using MyScript.IInk.UIReferenceImplementation.UserControls;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -115,25 +116,37 @@ namespace MyScript.IInk.GetStarted
             }
         }
 
-        private void NewFile()
+        private void ClosePackage()
         {
-            // Close current package
-            if (Editor.Part != null)
-            {
-                var part = Editor.Part;
-                var package = part?.Package;
-                Editor.Part = null;
-                part?.Dispose();
-                package?.Dispose();
-            }
+            var part = Editor.Part;
+            var package = part?.Package;
+            Editor.Part = null;
+            part?.Dispose();
+            package?.Dispose();
+            Title.Text = "";
+        }
 
-            // Create package and part
+        private async void NewFile()
+        {
+            try
             {
+                // Close current package
+                ClosePackage();
+
+                // Create package and part
                 var packageName = MakeUntitledFilename();
                 var package = _engine.CreatePackage(packageName);
                 var part = package.CreatePart(PartType);
                 Editor.Part = part;
                 Title.Text = "Type: " + PartType;
+            }
+            catch (Exception ex)
+            {
+                ClosePackage();
+
+                var msgDialog = new Windows.UI.Popups.MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+                Application.Current.Exit();
             }
         }
 
