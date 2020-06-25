@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("MyScript")]
 [assembly: AssemblyProduct("MyScript.InteractiveInk.Demo.Uwp")]
-[assembly: AssemblyCopyright("Copyright MyScript. All rights reserved.")]
+[assembly: AssemblyCopyright("Copyright @ MyScript. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
