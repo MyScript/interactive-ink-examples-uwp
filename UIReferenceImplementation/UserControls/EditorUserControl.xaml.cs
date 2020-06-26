@@ -1,4 +1,4 @@
-// Copyright MyScript. All right reserved.
+// Copyright @ MyScript. All rights reserved.
 
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;

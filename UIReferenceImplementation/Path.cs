@@ -1,4 +1,4 @@
-﻿// Copyright MyScript. All right reserved.
+// Copyright @ MyScript. All rights reserved.
 
 using MyScript.IInk.Graphics;
 using Microsoft.Graphics.Canvas;
