@@ -12,6 +12,8 @@ namespace MyScript.IInk.UIReferenceImplementation
 {
     public class FontMetricsProvider : IFontMetricsProvider2
     {
+        public const bool UseColorFont = true;
+
         private float dpiX;
         private float dpiY;
 
@@ -105,30 +107,38 @@ namespace MyScript.IInk.UIReferenceImplementation
                     FontFamily = fontKey.FontFamily,
                     FontStyle = fontKey.FontStyle,
                     FontWeight = fontKey.FontWeight,
-                    WordWrapping = CanvasWordWrapping.NoWrap
+                    WordWrapping = CanvasWordWrapping.NoWrap,
+                    Options = UseColorFont ? CanvasDrawTextOptions.EnableColorFont : CanvasDrawTextOptions.Default
                 };
 
                 using (var canvasCharLayout = new CanvasTextLayout(canvasDevice, glyphLabel, textFormat, 0.0f, 0.0f))
                 {
-                    canvasCharLayout.SetFontFamily(0, 1, fontKey.FontFamily);
-                    canvasCharLayout.SetFontSize(0, 1, fontKey.FontSize);
-                    canvasCharLayout.SetFontWeight(0, 1, fontKey.FontWeight);
-                    canvasCharLayout.SetFontStyle(0, 1, fontKey.FontStyle);
+                    int charCount = 0;
+                    if (canvasCharLayout.ClusterMetrics != null)
+                    {
+                        foreach (var c in canvasCharLayout.ClusterMetrics)
+                            charCount += c.CharacterCount;
+                    }
 
-                    var charRect = canvasCharLayout.DrawBounds;
-                    var charX = (float)charRect.X;
-                    var charY = (float)charRect.Y - canvasCharLayout.LineMetrics[0].Baseline;
-                    var charLeftBearing = (float)(-charRect.Left);
-                    var charAdvance = canvasCharLayout.GetCaretPosition(0, true);
-                    var charRightBearing = (float)(charAdvance.X - charRect.Right);
+                    var rect = canvasCharLayout.DrawBounds;
+                    var left = (float)rect.Left;
+                    var top = (float)rect.Top - canvasCharLayout.LineMetrics[0].Baseline;
+                    var leftBearing = (float)(-rect.Left);
+                    var height = (float)rect.Height;
 
-                    var glyphX = px2mm(charX, dpiX);
-                    var glyphY = px2mm(charY, dpiY);
-                    var glyphW = px2mm((float)charRect.Width, dpiX);
-                    var glyphH = px2mm((float)charRect.Height, dpiY);
+                    var charEnd = (charCount > 0) ? (charCount - 1) : 0;
+                    var advance = canvasCharLayout.GetCaretPosition(charEnd, true);
+                    var width = (float)rect.Width;
+                    var right = (float)rect.Right;
+                    var rightBearing = (float)advance.X - right;
+
+                    var glyphX = px2mm(left, dpiX);
+                    var glyphY = px2mm(top, dpiY);
+                    var glyphW = px2mm(width, dpiX);
+                    var glyphH = px2mm(height, dpiY);
                     var glyphRect = new Rectangle(glyphX, glyphY, glyphW, glyphH);
-                    var glyphLeftBearing = px2mm(charLeftBearing, dpiX);
-                    var glyphRightBearing = px2mm(charRightBearing, dpiX);
+                    var glyphLeftBearing = px2mm(leftBearing, dpiX);
+                    var glyphRightBearing = px2mm(rightBearing, dpiX);
 
                     value = new GlyphMetrics(glyphRect, glyphLeftBearing, glyphRightBearing);
                     fontCache[glyphLabel] = value;
@@ -180,15 +190,16 @@ namespace MyScript.IInk.UIReferenceImplementation
                     FontFamily = firstFontKey.FontFamily,
                     FontStyle = firstFontKey.FontStyle,
                     FontWeight = firstFontKey.FontWeight,
-                    WordWrapping = CanvasWordWrapping.NoWrap
+                    WordWrapping = CanvasWordWrapping.NoWrap,
+                    Options = UseColorFont ? CanvasDrawTextOptions.EnableColorFont : CanvasDrawTextOptions.Default
                 };
 
                 using (var canvasTextLayout = new CanvasTextLayout(canvasDevice, text.Label, textFormat, 0.0f, 0.0f))
                 {
                     for (int i = 0; i < spans.Length; ++i)
                     {
-                        var charIndex = spans[i].BeginPosition;
-                        var charCount = spans[i].EndPosition - spans[i].BeginPosition;
+                        var charIndex = text.GetGlyphBeginAt(spans[i].BeginPosition);
+                        var charCount = text.GetGlyphEndAt(spans[i].EndPosition - 1) - charIndex;
 
                         var style = spans[i].Style;
                         var fontKey = FontKeyFromStyle(style);
@@ -199,35 +210,40 @@ namespace MyScript.IInk.UIReferenceImplementation
                         canvasTextLayout.SetFontStyle(charIndex, charCount, fontKey.FontStyle);
                     }
 
-                    // Use of TextElementEnumerator to get character indices as in the CanvasTextLayout
-                    var tee = StringInfo.GetTextElementEnumerator(text.Label);
-
-                    // Use of ClusterMetrics to identify ligatures in the CanvasTextLayout
-                    int cluster = 0;
-                    int clusterStartChar = 0;
-                    var clusterCharCount = canvasTextLayout.ClusterMetrics[cluster].CharacterCount;
-
-                    for (int i = 0, g = 0; i < text.GlyphCount; ++i)
+                    for (int i = 0; i < text.GlyphCount; ++i)
                     {
-                        var fontKey = new FontKey   ( canvasTextLayout.GetFontFamily(i)
-                                                    , canvasTextLayout.GetFontSize(i)
-                                                    , canvasTextLayout.GetFontWeight(i)
-                                                    , canvasTextLayout.GetFontStyle(i));
                         var glyphLabel = text.GetGlyphLabelAt(i);
-                        var glyphMetrics_ = GetGlyphMetrics(fontKey, glyphLabel, canvasDevice);
+                        var glyphCharStart = text.GetGlyphBeginAt(i);
+                        var glyphCharEnd = text.GetGlyphEndAt(i);
+
+                        var glyphFontKey = new FontKey  ( canvasTextLayout.GetFontFamily(glyphCharStart)
+                                                        , canvasTextLayout.GetFontSize(glyphCharStart)
+                                                        , canvasTextLayout.GetFontWeight(glyphCharStart)
+                                                        , canvasTextLayout.GetFontStyle(glyphCharStart));
+
+                        var glyphMetrics_ = GetGlyphMetrics(glyphFontKey, glyphLabel, canvasDevice);
 
                         // Find cluster associated to element
-                        if (tee.MoveNext())
-                            g = tee.ElementIndex;
+                        // (Use of ClusterMetrics to identify ligatures in the CanvasTextLayout)
+                        int cluster = -1;
+                        int clusterCharStart = 0;
 
-                        while ( (g < clusterStartChar) || (g >= (clusterStartChar + clusterCharCount)) )
+                        if (canvasTextLayout.ClusterMetrics != null)
                         {
-                            ++cluster;
-                            clusterStartChar += clusterCharCount;
-                            clusterCharCount = canvasTextLayout.ClusterMetrics[cluster].CharacterCount;
+                            for (int c = 0; c < canvasTextLayout.ClusterMetrics.Length; ++c)
+                            {
+                                var clusterCharCount = canvasTextLayout.ClusterMetrics[c].CharacterCount;
+                                if ((glyphCharStart >= clusterCharStart) && (glyphCharStart < (clusterCharStart + clusterCharCount)))
+                                {
+                                    cluster = c;
+                                    break;
+                                }
+
+                                clusterCharStart += clusterCharCount;
+                            }
                         }
 
-                        if (g > clusterStartChar)
+                        if ( (i > 0) && (cluster >= 0) && (glyphCharStart > clusterCharStart) )
                         {
                             // Ligature with the previous glyph
                             // The position is not accurate because of glyphs substitution at rendering
@@ -240,8 +256,20 @@ namespace MyScript.IInk.UIReferenceImplementation
                         }
                         else
                         {
-                            var charPos = canvasTextLayout.GetCaretPosition(g, false);
-                            glyphMetrics_.BoundingBox.X += px2mm(charPos.X, dpiX);
+                            float glyphX = 0.0f;
+                            var charRegions = canvasTextLayout.GetCharacterRegions(glyphCharStart, glyphCharEnd - glyphCharStart);
+
+                            if ((charRegions != null) && (charRegions.Length > 0))
+                            {
+                                glyphX = (float)charRegions[0].LayoutBounds.X;
+                            }
+                            else
+                            {
+                                var glyphPos = canvasTextLayout.GetCaretPosition(glyphCharStart, false);
+                                glyphX = (float)glyphPos.X;
+                            }
+
+                            glyphMetrics_.BoundingBox.X += px2mm(glyphX, dpiX);
                         }
 
                         glyphMetrics[i] = glyphMetrics_;

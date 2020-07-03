@@ -57,7 +57,9 @@ namespace MyScript.IInk.UIReferenceImplementation
             _fontProperties = new CanvasTextFormat
             {
                 FontStyle = Windows.UI.Text.FontStyle.Normal,
-                FontWeight = Windows.UI.Text.FontWeights.Normal
+                FontWeight = Windows.UI.Text.FontWeights.Normal,
+                WordWrapping = CanvasWordWrapping.NoWrap,
+                Options = FontMetricsProvider.UseColorFont ? CanvasDrawTextOptions.EnableColorFont : CanvasDrawTextOptions.Default
             };
 
             _baseline = 1.0f;
