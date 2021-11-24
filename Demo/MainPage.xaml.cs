@@ -205,9 +205,6 @@ namespace MyScript.IInk.Demo
 
             if (!string.IsNullOrEmpty(partType))
             {
-                // Reset viewing parameters
-                UcEditor.ResetView(false);
-
                 _lastSelectedBlock?.Dispose();
                 _lastSelectedBlock = null;
 
@@ -232,6 +229,9 @@ namespace MyScript.IInk.Demo
                     var msgDialog = new MessageDialog(ex.ToString());
                     await msgDialog.ShowAsync();
                 }
+
+                // Reset viewing parameters
+                UcEditor.ResetView(false);
             }
         }
 
@@ -246,9 +246,6 @@ namespace MyScript.IInk.Demo
 
                 if (index > 0)
                 {
-                    // Reset viewing parameters
-                    UcEditor.ResetView(false);
-
                     _lastSelectedBlock?.Dispose();
                     _lastSelectedBlock = null;
                     _editor.Part = null;
@@ -281,6 +278,9 @@ namespace MyScript.IInk.Demo
                         _editor.Part = part;
                         Title.Text = _packageName + " - " + part.Type;
                     }
+
+                    // Reset viewing parameters
+                    UcEditor.ResetView(false);
                 }
             }
         }
@@ -297,9 +297,6 @@ namespace MyScript.IInk.Demo
 
                 if (index < count - 1)
                 {
-                    // Reset viewing parameters
-                    UcEditor.ResetView(false);
-
                     _lastSelectedBlock?.Dispose();
                     _lastSelectedBlock = null;
                     _editor.Part = null;
@@ -332,6 +329,9 @@ namespace MyScript.IInk.Demo
                         _editor.Part = part;
                         Title.Text = _packageName + " - " + part.Type;
                     }
+
+                    // Reset viewing parameters
+                    UcEditor.ResetView(false);
                 }
             }
         }
@@ -389,9 +389,6 @@ namespace MyScript.IInk.Demo
             _lastSelectedBlock?.Dispose();
             _lastSelectedBlock = null;
 
-            // Reset viewing parameters
-            UcEditor.ResetView(false);
-
             try
             {
                 // Save and close current package
@@ -412,6 +409,9 @@ namespace MyScript.IInk.Demo
                 var msgDialog = new MessageDialog(ex.ToString());
                 await msgDialog.ShowAsync();
             }
+
+            // Reset viewing parameters
+            UcEditor.ResetView(false);
         }
 
         private async void AppBar_SavePackageButton_Click(object sender, RoutedEventArgs e)

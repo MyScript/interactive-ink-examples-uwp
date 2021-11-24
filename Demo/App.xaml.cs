@@ -21,7 +21,7 @@ namespace MyScript.IInk.Demo
             UnhandledException += OnUnhandledException;
         }
 
-        private static async void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        private static async void OnUnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
         {
             e.Handled = true;
             await ShowErrorDialog(e.Message);

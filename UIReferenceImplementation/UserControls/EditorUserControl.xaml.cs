@@ -620,9 +620,49 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         public void ResetView(bool forceInvalidate)
         {
+            if (!HasPart())
+                return;
+
+            // Reset view offset and scale
             _renderer.ViewScale = 1;
             _renderer.ViewOffset = new Graphics.Point(0, 0);
-            
+
+            // Get new view transform (keep only scale and offset)
+            var tr = _renderer.GetViewTransform();
+            tr = new Graphics.Transform(tr.XX, tr.YX, 0, tr.XY, tr.YY, 0);
+
+            // Compute new view offset
+            var offset = new Graphics.Point(0, 0);
+
+            if (_editor.Part.Type == "Raw Content")
+            {
+                // Center view on the center of content for "Raw Content" parts
+                var contentBox = _editor.GetRootBlock().Box;
+                var contentCenter = new Graphics.Point(contentBox.X + (contentBox.Width * 0.5f), contentBox.Y + (contentBox.Height * 0.5f));
+
+                // From model coordinates to view coordinates
+                contentCenter = tr.Apply(contentCenter.X, contentCenter.Y);
+
+                var viewCenter = new Graphics.Point(_editor.ViewWidth * 0.5f, _editor.ViewHeight * 0.5f);
+                offset.X = contentCenter.X - viewCenter.X;
+                offset.Y = contentCenter.Y - viewCenter.Y;
+            }
+            else
+            {
+                // Move the origin to the top-left corner of the page for other types of parts
+                var boxV = _editor.Part.ViewBox;
+
+                offset.X = boxV.X;
+                offset.Y = boxV.Y;
+
+                // From model coordinates to view coordinates
+                offset = tr.Apply(offset.X, offset.Y);
+            }
+
+            // Set new view offset
+            _editor.ClampViewOffset(offset);
+            _renderer.ViewOffset = offset;
+
             if (forceInvalidate)
                 Invalidate(_renderer, LayerType.LayerType_ALL);
         }
