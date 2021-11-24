@@ -30,7 +30,6 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         private CanvasActiveLayer _activeLayer;
         private Rect _activeLayerRect;
-        private CanvasActiveLayer _drawingLayer;
 
         public Canvas(CanvasDrawingSession session, IRenderTarget target, ImageLoader imageLoader)
         {
@@ -67,7 +66,6 @@ namespace MyScript.IInk.UIReferenceImplementation
             _layers = new Dictionary<string, Rect>();
             _activeLayer = null;
             _activeLayerRect = Rect.Empty;
-            _drawingLayer = null;
         }
 
         public void DisposeSession()
@@ -377,21 +375,17 @@ namespace MyScript.IInk.UIReferenceImplementation
             if (editor?.SupportsOffscreenRendering() ?? false)
             {
                 var drawingLayerRect = new Rect(x, y, width, height);
-                _drawingLayer = _session.CreateLayer(1.0f, drawingLayerRect);
-                var color = Windows.UI.Color.FromArgb((byte)0, (byte)0, (byte)0, (byte)0);
-                _session.Clear(color);
+                using (var drawingLayer = _session.CreateLayer(1.0f, drawingLayerRect))
+                {
+                    var color = Windows.UI.Color.FromArgb((byte)0, (byte)0, (byte)0, (byte)0);
+                    _session.Clear(color);
+                }
             }
         }
 
         public void EndDraw()
         {
             End();
-
-            if (_drawingLayer != null)
-            {
-                _drawingLayer.Dispose();
-                _drawingLayer = null;
-            }
         }
 
         public void BlendOffscreen(UInt32 id,
