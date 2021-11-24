@@ -41,7 +41,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         }
     }
 
-    public class EditorListener : IEditorListener2
+    public class EditorListener : IEditorListener
     {
         private EditorUserControl _ucEditor;
 
@@ -86,10 +86,10 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             }
         }
 
-        public void OnError(Editor editor, string blockId, string message)
+        public void OnError(Editor editor, string blockId, EditorError error, string message)
         {
             var dispatcher = _ucEditor.Dispatcher;
-            var task = dispatcher.RunAsync( CoreDispatcherPriority.Normal,
+            var task = dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                                             () =>
                                             {
                                                 var dlg = new MessageDialog(message);
