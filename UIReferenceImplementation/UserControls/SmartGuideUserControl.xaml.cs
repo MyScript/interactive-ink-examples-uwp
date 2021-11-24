@@ -268,28 +268,32 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
                 var words = new List<Word>();
                 var jiix = JsonValue.Parse(jiixStr) as JsonObject;
-                var jiixWords = (JsonArray)jiix["words"];
-                foreach (var jiixWord_ in jiixWords)
+                JsonValue jiixWords_ = null;
+
+                if (jiix?.TryGetValue("words", out jiixWords_) ?? false)
                 {
-                    var jiixWord = (JsonObject)jiixWord_;
+                    var jiixWords = (JsonArray)jiixWords_;
 
-                    var label = (string)jiixWord["label"];
-
-
-                    // in smart guide, we want everything on the same line, so we override the label with the reflow label
-                    if (jiixWord.ContainsKey("reflow-label"))
-                        label = (string)jiixWord["reflow-label"];
-
-                    var candidates = new List<string>();
-                    JsonValue jiixCandidates_;
-                    if (jiixWord.TryGetValue("candidates", out jiixCandidates_))
+                    foreach (var jiixWord_ in jiixWords)
                     {
-                        var jiixCandidates = (JsonArray)jiixCandidates_;
-                        foreach (var jiixCandidate_ in jiixCandidates)
-                            candidates.Add((string)jiixCandidate_);
-                    }
+                        var jiixWord = (JsonObject)jiixWord_;
+                        var label = (string)jiixWord["label"];
 
-                    words.Add(new Word() { Label = label, Candidates = candidates, Updated = false });
+                        // in smart guide, we want everything on the same line, so we override the label with the reflow label
+                        if (jiixWord.ContainsKey("reflow-label"))
+                            label = (string)jiixWord["reflow-label"];
+
+                        var candidates = new List<string>();
+                        JsonValue jiixCandidates_;
+                        if (jiixWord.TryGetValue("candidates", out jiixCandidates_))
+                        {
+                            var jiixCandidates = (JsonArray)jiixCandidates_;
+                            foreach (var jiixCandidate_ in jiixCandidates)
+                                candidates.Add((string)jiixCandidate_);
+                        }
+
+                        words.Add(new Word() { Label = label, Candidates = candidates, Updated = false });
+                    }
                 }
 
                 _currentWords = words;
