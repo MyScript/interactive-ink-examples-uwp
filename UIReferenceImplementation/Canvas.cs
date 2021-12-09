@@ -103,10 +103,27 @@ namespace MyScript.IInk.UIReferenceImplementation
             get { return _transform; }
             set
             {
+                var prevTr = new Transform(_transform);
                 _transform = value;
                 _session.Transform = new Matrix3x2((float)Transform.XX, (float)Transform.XY,
-                                                  (float)Transform.YX, (float)Transform.YY,
-                                                  (float)Transform.TX, (float)Transform.TY);
+                                                   (float)Transform.YX, (float)Transform.YY,
+                                                   (float)Transform.TX, (float)Transform.TY);
+                // Update clipping, if any
+                if (_activeLayer != null)
+                {
+                    var invTransform = new Transform(_transform);
+                    invTransform.Invert();
+                    invTransform.Multiply(prevTr);
+                    var topLeft  = invTransform.Apply((float)_activeLayerRect.Left,  (float)_activeLayerRect.Top);
+                    var btmRight = invTransform.Apply((float)_activeLayerRect.Right, (float)_activeLayerRect.Bottom);
+                    _activeLayerRect.X = topLeft.X;
+                    _activeLayerRect.Y = topLeft.Y;
+                    _activeLayerRect.Width  = btmRight.X - topLeft.X;
+                    _activeLayerRect.Height = btmRight.Y - topLeft.Y;
+
+                    _activeLayer.Dispose();
+                    _activeLayer = _session.CreateLayer(1.0f, _activeLayerRect);
+                }
             }
         }
 
