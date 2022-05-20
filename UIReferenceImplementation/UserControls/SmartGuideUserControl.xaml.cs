@@ -102,6 +102,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         private int removeHighlightDelay;
 
         private ParameterSet _exportParams;
+        private ParameterSet _importParams;
 
         public Editor Editor
         {
@@ -123,6 +124,12 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 _exportParams?.SetBoolean("export.jiix.glyphs", false);
                 _exportParams?.SetBoolean("export.jiix.primitives", false);
                 _exportParams?.SetBoolean("export.jiix.chars", false);
+
+                _importParams = editor.Engine.CreateParameterSet();
+                _importParams?.SetString("diagram.import.jiix.action", "update");
+                _importParams?.SetString("raw-content.import.jiix.action", "update");
+                _importParams?.SetString("text-document.import.jiix.action", "update");
+                _importParams?.SetString("text.import.jiix.action", "update");
             }
         }
 
@@ -843,7 +850,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 var jiixWord = (JsonObject)jiixWords[command.WordIndex];
                 jiixWord["label"] = command.Label;
                 jiixStr = jiix.ToString();
-                Editor.Import_(MimeType.JIIX, jiixStr, _currentBlock);
+                Editor.Import_(MimeType.JIIX, jiixStr, _currentBlock, _importParams);
                 _currentWords[command.WordIndex].Label = command.Label;
                 command.WordView.Text = command.Label;
             }
