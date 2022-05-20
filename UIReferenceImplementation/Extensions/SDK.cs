@@ -59,6 +59,12 @@ namespace MyScript.IInk.UIReferenceImplementation.Extensions
             return new Color(source.R, source.G, source.B, source.A);
         }
 
+        public static Windows.UI.Color ToPlatform(this Color source)
+        {
+            return new Windows.UI.Color
+                { A = (byte)source.A, B = (byte)source.B, G = (byte)source.G, R = (byte)source.R };
+        }
+
         #endregion
     }
 }

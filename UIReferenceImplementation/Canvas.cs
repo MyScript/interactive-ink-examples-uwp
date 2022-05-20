@@ -9,6 +9,7 @@ using System;
 using System.Numerics;
 using System.Collections.Generic;
 using Windows.Foundation;
+using MyScript.IInk.UIReferenceImplementation.Extensions;
 
 namespace MyScript.IInk.UIReferenceImplementation
 {
@@ -30,6 +31,15 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         private CanvasActiveLayer _activeLayer;
         private Rect _activeLayerRect;
+
+        #region Privates (Drop Shadow)
+
+        private float _dropShadowOffsetX = 0.5f;
+        private float _dropShadowOffsetY = 0.5f;
+        private float _dropShadowRadius = 2.0f;
+        private Windows.UI.Color _dropShadowColor = default(Windows.UI.Color);
+
+        #endregion
 
         public Canvas(CanvasDrawingSession session, IRenderTarget target, ImageLoader imageLoader)
         {
@@ -129,7 +139,7 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         public void SetStrokeColor(Color color)
         {
-            _strokeColor = Windows.UI.Color.FromArgb((byte)color.A, (byte)color.R, (byte)color.G, (byte)color.B);
+            _strokeColor = color.ToPlatform();
         }
 
         public void SetStrokeWidth(float width)
@@ -186,7 +196,7 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         public void SetFillColor(Color color)
         {
-            _fillColor = Windows.UI.Color.FromArgb((byte)color.A, (byte)color.R, (byte)color.G, (byte)color.B);
+            _fillColor = color.ToPlatform();
         }
 
         public void SetFillRule(FillRule rule)
@@ -195,6 +205,14 @@ namespace MyScript.IInk.UIReferenceImplementation
                 _fillRule = CanvasFilledRegionDetermination.Winding;
             else if (rule == FillRule.EVENODD)
                 _fillRule = CanvasFilledRegionDetermination.Alternate;
+        }
+
+        public void SetDropShadow(float xOffset, float yOffset, float radius, Color color)
+        {
+            _dropShadowOffsetX = xOffset;
+            _dropShadowOffsetY = yOffset;
+            _dropShadowRadius = radius;
+            _dropShadowColor = color.ToPlatform();
         }
 
         public void SetFontProperties(string family, float lineHeight, float size, string style, string variant, int weight)
@@ -293,38 +311,63 @@ namespace MyScript.IInk.UIReferenceImplementation
         public void DrawPath(IPath path)
         {
             var geometry = ((Path)path).CreateGeometry();
+            var dropShadowTranslation = Matrix3x2.CreateTranslation(_dropShadowOffsetX, _dropShadowOffsetY).Translation;
 
             if (_fillColor.A > 0)
             {
+                if (_dropShadowColor.A > 0)
+                {
+                    _session.FillGeometry(geometry, dropShadowTranslation, _dropShadowColor);
+                }
+
                 _session.FillGeometry(geometry, _fillColor);
             }
 
             if (_strokeColor.A > 0)
             {
+                if (_dropShadowColor.A > 0)
+                {
+                    _session.DrawGeometry(geometry, dropShadowTranslation, _dropShadowColor, _strokeWidth, _strokeStyle);
+                }
+
                 _session.DrawGeometry(geometry, _strokeColor, _strokeWidth, _strokeStyle);
             }
         }
-
-
 
         /// <summary>Draw Rectangle to canvas according to region</summary>
         public void DrawRectangle(float x, float y, float width, float height)
         {
             if (_fillColor.A > 0)
             {
+                if (_dropShadowColor.A > 0)
+                {
+                    _session.FillRectangle(x + _dropShadowOffsetX, y + _dropShadowOffsetY, width, height, _dropShadowColor);
+                }
+
                 _session.FillRectangle(x, y, width, height, _fillColor);
             }
 
             if (_strokeColor.A > 0)
             {
+                if (_dropShadowColor.A > 0)
+                {
+                    _session.DrawRectangle(x + _dropShadowOffsetX, y + _dropShadowOffsetY, width, height, _dropShadowColor, _strokeWidth, _strokeStyle);
+                }
+
                 _session.DrawRectangle(x, y, width, height, _strokeColor, _strokeWidth, _strokeStyle);
             }
         }
+
         /// <summary>Draw Line to canvas according coordinates</summary>
         public void DrawLine(float x1, float y1, float x2, float y2)
         {
             if (_strokeColor.A > 0)
             {
+                if (_dropShadowColor.A > 0)
+                {
+                    _session.DrawLine(x1 + _dropShadowOffsetX, y1 + _dropShadowOffsetY, x2 + _dropShadowOffsetX, y2 + _dropShadowOffsetY, _dropShadowColor, _strokeWidth, _strokeStyle);
+                }
+
                 _session.DrawLine(x1, y1, x2, y2, _strokeColor, _strokeWidth, _strokeStyle);
             }
         }
@@ -379,6 +422,11 @@ namespace MyScript.IInk.UIReferenceImplementation
         {
             if (_fillColor.A > 0)
             {
+                if (_dropShadowColor.A > 0)
+                {
+                    _session.DrawText(label, x + _dropShadowOffsetX, y + _dropShadowOffsetY - _baseline, _dropShadowColor, _fontProperties);
+                }
+
                 _session.DrawText(label, x, y - _baseline, _fillColor, _fontProperties);
             }
         }
