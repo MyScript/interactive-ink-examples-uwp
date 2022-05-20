@@ -71,8 +71,8 @@
     <Compile Include="Extensions\Primitives.cs" />
     <Compile Include="Extensions\SDK.cs" />
     <Compile Include="FontMetricsProvider.cs" />
-    <Compile Include="ImageDrawer.cs" />
     <Compile Include="ImageLoader.cs" />
+    <Compile Include="ImagePainter.cs" />
     <Compile Include="Layer.cs" />
     <Compile Include="Path.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
