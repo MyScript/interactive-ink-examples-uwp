@@ -1,15 +1,17 @@
 // Copyright @ MyScript. All rights reserved.
 
+using System.Collections.Generic;
+using System.Linq;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Input;
-using Microsoft.Graphics.Canvas.UI.Xaml;
 using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.System;
 using Windows.Graphics.Display;
-using MyScript.IInk.Graphics;
-using System.Collections.Generic;
 using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.UI.Xaml;
+
+using MyScript.IInk.Graphics;
 using MyScript.IInk.UIReferenceImplementation.Extensions;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
@@ -257,6 +259,113 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 return (int)((HoldingRoutedEventArgs)e).PointerDeviceType;
 
             return -1;
+        }
+
+        [System.Flags]
+        public enum ContextualActions
+        {
+            NONE              = 0,
+            ADD_BLOCK         = 1 << 0,     /// Add block. See <c>Editor.GetSupportedAddBlockTypes</c>.
+            REMOVE            = 1 << 1,     /// Remove selection.
+            CONVERT           = 1 << 2,     /// Convert. See <c>Editor.GetSupportedTargetConversionStates</c>.
+            COPY              = 1 << 3,     /// Copy selection.
+            OFFICE_CLIPBOARD  = 1 << 4,     /// Copy selection to Microsoft Office clipboard.
+            PASTE             = 1 << 5,     /// Paste.
+            IMPORT            = 1 << 6,     /// Import. See <c>Editor.GetSupportedImportMimeTypes</c>.
+            EXPORT            = 1 << 7,     /// Export. See <c>Editor.GetSupportedExportMimeTypes</c>.
+            FORMAT_TEXT       = 1 << 8      /// Change Text blocks format.
+        }
+
+        public ContextualActions GetAvailableActions(ContentBlock contentBlock)
+        {
+            if (contentBlock == null || Editor == null)
+                return ContextualActions.NONE;
+
+            var part = Editor.Part;
+            if (part == null)
+                return ContextualActions.NONE;
+
+            var actions = ContextualActions.NONE;
+
+            using (var rootBlock = Editor.GetRootBlock())
+            {
+                var isRoot = contentBlock.Id == rootBlock.Id;
+                if (!isRoot && (contentBlock.Type == "Container"))
+                    return ContextualActions.NONE;
+
+                var onRawContent   = part.Type == "Raw Content";
+                var onTextDocument = part.Type == "Text Document";
+
+                var isEmpty = Editor.IsEmpty(contentBlock);
+
+                var supportedTypes   = Editor.SupportedAddBlockTypes;
+                var supportedExports = Editor.GetSupportedExportMimeTypes(onRawContent ? rootBlock : contentBlock);
+                var supportedImports = Editor.GetSupportedImportMimeTypes(contentBlock);
+                var supportedStates  = Editor.GetSupportedTargetConversionStates(contentBlock);
+                var supportedFormats = Editor.GetSupportedTextFormats(contentBlock);
+
+                var hasTypes   = (supportedTypes   != null) && supportedTypes.Any();
+                var hasExports = (supportedExports != null) && supportedExports.Any();
+                var hasImports = (supportedImports != null) && supportedImports.Any();
+                var hasStates  = (supportedStates  != null) && supportedStates.Any();
+                var hasFormats = (supportedFormats != null) && supportedFormats.Any();
+
+                if (hasTypes && isRoot)
+                    actions |= ContextualActions.ADD_BLOCK;
+                if (!isRoot)
+                    actions |= ContextualActions.REMOVE;
+                if (hasStates && !isEmpty)
+                    actions |= ContextualActions.CONVERT;
+                if (!onTextDocument || !isRoot)
+                    actions |= ContextualActions.COPY;
+                if (hasExports && supportedExports.Contains(MimeType.OFFICE_CLIPBOARD))
+                    actions |= ContextualActions.OFFICE_CLIPBOARD;
+                if (isRoot)
+                    actions |= ContextualActions.PASTE;
+                if (hasImports)
+                    actions |= ContextualActions.IMPORT;
+                if (hasExports)
+                    actions |= ContextualActions.EXPORT;
+                if (hasFormats)
+                    actions |= ContextualActions.FORMAT_TEXT;
+            }
+
+            return actions;
+        }
+
+        public ContextualActions GetAvailableActions(ContentSelection contentSelection)
+        {
+            if (contentSelection == null || Editor == null || Editor.IsEmpty(contentSelection))
+                return ContextualActions.NONE;
+
+            var part = Editor.Part;
+            if (part == null)
+                return ContextualActions.NONE;
+
+            var actions = ContextualActions.NONE;
+
+            var supportedExports = Editor.GetSupportedExportMimeTypes(contentSelection);
+            var supportedStates  = Editor.GetSupportedTargetConversionStates(contentSelection);
+            var supportedFormats = Editor.GetSupportedTextFormats(contentSelection);
+
+            var hasExports = (supportedExports != null) && supportedExports.Any();
+            var hasStates  = (supportedStates  != null) && supportedStates.Any();
+            var hasFormats = (supportedFormats != null) && supportedFormats.Any();
+
+            // Erase
+            actions |= ContextualActions.REMOVE;
+            if (hasStates)
+                actions |= ContextualActions.CONVERT;
+            // Copy
+            actions |= ContextualActions.COPY;
+            if (hasExports && supportedExports.Contains(MimeType.OFFICE_CLIPBOARD))
+                actions |= ContextualActions.OFFICE_CLIPBOARD;
+            if (hasExports)
+                actions |= ContextualActions.EXPORT;
+            if (hasFormats)
+                actions |= ContextualActions.FORMAT_TEXT;
+
+            return actions;
         }
 
         public void CancelSampling(int pointerId)
