@@ -32,7 +32,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         }
     }
 
-    public sealed partial class EditorUserControl : IRenderTarget2
+    public sealed partial class EditorUserControl : IRenderTarget
     {
         private ImageLoader _loader;
         private bool _smartGuideEnabled = true;

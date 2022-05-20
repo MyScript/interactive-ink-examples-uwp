@@ -13,7 +13,7 @@ using MyScript.IInk.UIReferenceImplementation.Extensions;
 
 namespace MyScript.IInk.UIReferenceImplementation
 {
-    public class Canvas : ICanvas2
+    public class Canvas : ICanvas
     {
         private CanvasDrawingSession _session;
         private IRenderTarget _target;

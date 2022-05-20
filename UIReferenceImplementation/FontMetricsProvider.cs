@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace MyScript.IInk.UIReferenceImplementation
 {
-    public class FontMetricsProvider : IFontMetricsProvider2
+    public class FontMetricsProvider : IFontMetricsProvider
     {
         public const bool UseColorFont = true;
 
