@@ -1,3 +1,5 @@
+// Copyright @ MyScript. All rights reserved.
+
 using System;
 using System.Collections.Generic;
 using System.Json;
@@ -386,7 +388,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         private void UpdateWidgets(UpdateCause cause)
         {
-            if (_currentBlock != null)
+            if (_currentBlock?.IsValid() ?? false)
             {
                 // Update size and position
                 var rectangle = _currentBlock.Box;
@@ -547,12 +549,12 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             }
         }
 
-        public void OnSelectionChanged(string[] blockIds)
+        public void OnSelectionChanged(string[] blockIds, MyScript.IInk.ContentSelectionMode mode)
         {
             _selectedBlock?.Dispose();
             _selectedBlock = null;
 
-            if (blockIds != null)
+            if ((blockIds != null) && (mode != MyScript.IInk.ContentSelectionMode.NONE) && (mode != MyScript.IInk.ContentSelectionMode.LASSO))
             {
                 foreach (var blockId in blockIds)
                 {
@@ -576,20 +578,15 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
             if (selectionChanged)
             {
-                if (_selectedBlock != null)
-                {
-                    BackupData();
+                BackupData();
+                _currentBlock?.Dispose();
+                _currentBlock = _selectedBlock?.ShallowCopy();
+                UpdateData();
 
-                    _currentBlock?.Dispose();
-                    _currentBlock = _selectedBlock?.ShallowCopy();
-
-                    UpdateData();
+                if (_currentBlock != null)
                     UpdateWidgets(UpdateCause.Selection);
-                }
                 else
-                {
                     ResetWidgets();
-                }
             }
         }
 
@@ -599,7 +596,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             _activeBlock = Editor.GetBlockById(blockId);
 
             if ( (_currentBlock != null) && (_activeBlock != null) && (_currentBlock.Id == _activeBlock.Id) )
-                return; // selectionChanged already changed the active block
+                return;
 
             BackupData();
             _currentBlock?.Dispose();
