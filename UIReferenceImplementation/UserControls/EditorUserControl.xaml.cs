@@ -4,6 +4,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Input;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Windows.UI.Core;
+using Windows.UI.Popups;
 using Windows.System;
 using Windows.Graphics.Display;
 using MyScript.IInk.Graphics;
@@ -287,13 +288,29 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             // Capture the pointer to the target.
             uiElement?.CapturePointer(e.Pointer);
 
-            _pointerId = (int)e.Pointer.PointerId;
-            _lastPointerPosition = new Graphics.Point((float)p.Position.X, (float)p.Position.Y);
-            _onScroll = false;
+            try
+            {
+                _pointerId = (int)e.Pointer.PointerId;
+                _lastPointerPosition = new Graphics.Point((float)p.Position.X, (float)p.Position.Y);
+                _onScroll = false;
 
-            // Send pointer down event to the editor
-            Editor?.PointerDown((float)p.Position.X, (float)p.Position.Y, GetTimestamp(p), p.Properties.Pressure, e.Pointer.PointerDeviceType.ToNative(), GetPointerId(e));
-
+                // Send pointer down event to the editor
+                Editor?.PointerDown((float)p.Position.X, (float)p.Position.Y, GetTimestamp(p), p.Properties.Pressure, e.Pointer.PointerDeviceType.ToNative(), GetPointerId(e));
+            }
+            catch (System.Exception ex)
+            {
+                if (ex.HResult == (int)MyScript.IInk.ExceptionHResult.POINTER_SEQUENCE_ERROR)
+                {
+                    // Special case: pointerDown already called, discard previous and retry
+                    Editor?.PointerCancel(GetPointerId(e));
+                    Editor?.PointerDown((float)p.Position.X, (float)p.Position.Y, GetTimestamp(p), p.Properties.Pressure, e.Pointer.PointerDeviceType.ToNative(), GetPointerId(e));
+                }
+                else
+                {
+                    var dlg = new MessageDialog(ex.Message);
+                    var dlgTask = dlg.ShowAsync();
+                }
+            }
             // Prevent most handlers along the event route from handling the same event again.
             e.Handled = true;
         }
@@ -333,7 +350,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 if (_onScroll)
                 {
                     // Entering scrolling mode, cancel previous pointerDown event
-                    Editor.PointerCancel(GetPointerId(e));
+                    Editor?.PointerCancel(GetPointerId(e));
                 }
             }
 
@@ -360,7 +377,15 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                         events[j++] = new PointerEvent(PointerEventType.MOVE, (float)p_.Position.X, (float)p_.Position.Y, GetTimestamp(p_), p_.Properties.Pressure, pointerType, GetPointerId(e));
                     }
 
-                    Editor.PointerEvents(events);
+                    // Send pointer move events to the editor
+                    try
+                    {
+                        Editor?.PointerEvents(events);
+                    }
+                    catch
+                    {
+                        // Don't show error for every move event
+                    }
                 }
             }
 
@@ -398,8 +423,15 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             }
             else
             {
-                // Send pointer move event to the editor
-                Editor.PointerUp((float)p.Position.X, (float)p.Position.Y, GetTimestamp(p), p.Properties.Pressure, e.Pointer.PointerDeviceType.ToNative(), GetPointerId(e));
+                // Send pointer up event to the editor
+                try
+                {
+                    Editor?.PointerUp((float)p.Position.X, (float)p.Position.Y, GetTimestamp(p), p.Properties.Pressure, e.Pointer.PointerDeviceType.ToNative(), GetPointerId(e));
+                }
+                catch
+                {
+                    // Don't show error for up event
+                }
             }
 
             _pointerId = -1;
