@@ -6,9 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:Win2Dcanvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    >
-  <Grid>
+    mc:Ignorable="d">
+    <Grid>
         <Win2Dcanvas:CanvasVirtualControl x:Name="modelCanvas"
                                           HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                                           RegionsInvalidated="Canvas_OnRegionsInvalidated"
@@ -24,6 +23,8 @@
                                           PointerWheelChanged="Capture_PointerWheelChanged"
                                           Padding="0" />
 
-        <local:SmartGuideUserControl x:Name="smartGuide" Visibility="Collapsed" />
+        <local:SmartGuideUserControl x:Name="smartGuide"
+                                     Editor="{x:Bind Editor, Mode=OneWay}"
+                                     Visibility="Collapsed" />
     </Grid>
 </UserControl>

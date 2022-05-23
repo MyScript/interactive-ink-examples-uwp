@@ -1,53 +1,81 @@
 // Copyright @ MyScript. All rights reserved.
 
-using MyScript.IInk.UIReferenceImplementation.UserControls;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
+using Windows.Graphics.Display;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
+using MyScript.IInk.UIReferenceImplementation;
 
 namespace MyScript.IInk.GetStarted
 {
-    public sealed partial class MainPage : Page
+    public sealed partial class MainPage
     {
+        public static readonly DependencyProperty EditorProperty =
+            DependencyProperty.Register("Editor", typeof(Editor), typeof(MainPage),
+                new PropertyMetadata(default(Editor)));
+
+        public Editor Editor
+        {
+            get => GetValue(EditorProperty) as Editor;
+            set => SetValue(EditorProperty, value);
+        }
+    }
+
+    public sealed partial class MainPage
+    {
+        // Offscreen rendering
+        private float _dpiX = 96;
+        private float _dpiY = 96;
+
         // Defines the type of content (possible values are: "Text Document", "Text", "Diagram", "Math", "Drawing" and "Raw Content")
         private const string PartType = "Text Document";
-
-        private Engine _engine;
-
-        private Editor Editor => UcEditor.Editor;
 
         public MainPage()
         {
             InitializeComponent();
-
-            Loaded += UcEditor.UserControl_Loaded;
-            Loaded += Page_Loaded;
+            Initialize(App.Engine);
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private void Initialize(Engine engine)
         {
-            _engine = App.Engine;
-
-            // Folders "conf" and "resources" are currently parts of the layout
-            // (for each conf/res file of the project => properties => "Build Action = content")
-            var confDirs = new string[1];
-            confDirs[0] = "conf";
-            _engine.Configuration.SetStringArray("configuration-manager.search-path", confDirs);
-
-            var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
-            var tempFolder = System.IO.Path.Combine(localFolder, "tmp");
-            _engine.Configuration.SetString("content-package.temp-folder", tempFolder);
-
             // Initialize the editor with the engine
-            UcEditor.Engine = _engine;
+            var info = DisplayInformation.GetForCurrentView();
+            _dpiX = info.RawDpiX;
+            _dpiY = info.RawDpiY;
+            var pixelDensity = UcEditor.GetPixelDensity();
 
-            // Force pointer to be a pen, for an automatic detection, set InputMode to AUTO
-            SetInputMode(InputMode.PEN);
+            if (pixelDensity > 0.0f)
+            {
+                _dpiX /= pixelDensity;
+                _dpiY /= pixelDensity;
+            }
+
+            // RawDpi properties can return 0 when the monitor does not provide physical dimensions and when the user is
+            // in a clone or duplicate multiple -monitor setup.
+            if (_dpiX == 0 || _dpiY == 0)
+                _dpiX = _dpiY = 96;
+
+            var renderer = engine.CreateRenderer(_dpiX, _dpiY, UcEditor);
+            renderer.AddListener(new RendererListener(UcEditor));
+            var toolController = engine.CreateToolController();
+            Initialize(Editor = engine.CreateEditor(renderer, toolController));
+            Initialize(Editor.ToolController);
 
             NewFile();
+        }
+
+        private void Initialize(Editor editor)
+        {
+            editor.SetViewSize((int)ActualWidth, (int)ActualHeight);
+            editor.SetFontMetricsProvider(new FontMetricsProvider(_dpiX, _dpiY));
+            editor.AddListener(new EditorListener(UcEditor));
+        }
+
+        private static void Initialize(ToolController controller)
+        {
+            controller.SetToolForType(PointerType.MOUSE, PointerTool.PEN);
+            controller.SetToolForType(PointerType.PEN, PointerTool.PEN);
+            controller.SetToolForType(PointerType.TOUCH, PointerTool.PEN);
         }
 
         private void AppBar_UndoButton_Click(object sender, RoutedEventArgs e)
@@ -81,41 +109,6 @@ namespace MyScript.IInk.GetStarted
             }
         }
 
-        private void SetInputMode(InputMode inputMode)
-        {
-            UcEditor.InputMode = inputMode;
-            autoToggleButton.IsChecked = (inputMode == InputMode.AUTO);
-            touchPointerToggleButton.IsChecked = (inputMode == InputMode.TOUCH);
-            editToggleButton.IsChecked = (inputMode == InputMode.PEN);
-        }
-
-        private void AppBar_TouchPointerButton_Click(object sender, RoutedEventArgs e)
-        {
-            var isChecked = ((ToggleButton)(sender)).IsChecked;
-            if (isChecked != null && (bool)isChecked)
-            {
-                SetInputMode(InputMode.TOUCH);
-            }
-        }
-
-        private void AppBar_EditButton_Click(object sender, RoutedEventArgs e)
-        {
-            var isChecked = ((ToggleButton)(sender)).IsChecked;
-            if (isChecked != null && (bool)isChecked)
-            {
-                SetInputMode(InputMode.PEN);
-            }
-        }
-
-        private void AppBar_AutoButton_Click(object sender, RoutedEventArgs e)
-        {
-            var isChecked = ((ToggleButton)(sender)).IsChecked;
-            if (isChecked != null && (bool)isChecked)
-            {
-                SetInputMode(InputMode.AUTO);
-            }
-        }
-
         private void ClosePackage()
         {
             var part = Editor.Part;
@@ -135,7 +128,7 @@ namespace MyScript.IInk.GetStarted
 
                 // Create package and part
                 var packageName = MakeUntitledFilename();
-                var package = _engine.CreatePackage(packageName);
+                var package = Editor.Engine.CreatePackage(packageName);
                 var part = package.CreatePart(PartType);
                 Editor.Part = part;
                 Title.Text = "Type: " + PartType;
@@ -164,6 +157,30 @@ namespace MyScript.IInk.GetStarted
             while (System.IO.File.Exists(name));
 
             return name;
+        }
+
+        private void OnPenClick(object sender, RoutedEventArgs e)
+        {
+            if (!(Editor?.ToolController is ToolController controller)) return;
+            controller.SetToolForType(PointerType.MOUSE, PointerTool.PEN);
+            controller.SetToolForType(PointerType.PEN, PointerTool.PEN);
+            controller.SetToolForType(PointerType.TOUCH, PointerTool.PEN);
+        }
+
+        private void OnTouchClick(object sender, RoutedEventArgs e)
+        {
+            if (!(Editor?.ToolController is ToolController controller)) return;
+            controller.SetToolForType(PointerType.MOUSE, PointerTool.HAND);
+            controller.SetToolForType(PointerType.PEN, PointerTool.HAND);
+            controller.SetToolForType(PointerType.TOUCH, PointerTool.HAND);
+        }
+
+        private void OnAutoClick(object sender, RoutedEventArgs e)
+        {
+            if (!(Editor?.ToolController is ToolController controller)) return;
+            controller.SetToolForType(PointerType.MOUSE, PointerTool.PEN);
+            controller.SetToolForType(PointerType.PEN, PointerTool.HAND);
+            controller.SetToolForType(PointerType.TOUCH, PointerTool.PEN);
         }
     }
 }

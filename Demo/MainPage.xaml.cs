@@ -1,18 +1,17 @@
 // Copyright @ MyScript. All rights reserved.
 
 using MyScript.IInk.UIReferenceImplementation;
-using MyScript.IInk.UIReferenceImplementation.UserControls;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Windows.Graphics.Display;
 using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
 
 namespace MyScript.IInk.Demo
 {
@@ -42,17 +41,30 @@ namespace MyScript.IInk.Demo
         public event EventHandler CanExecuteChanged;
     }
 
-    public sealed partial class MainPage : Page
+    public sealed partial class MainPage
     {
-        private Engine _engine;
+        public static readonly DependencyProperty EditorProperty =
+            DependencyProperty.Register("Editor", typeof(Editor), typeof(MainPage),
+                new PropertyMetadata(default(Editor)));
 
-        private Editor _editor => UcEditor.Editor;
+        public Editor Editor
+        {
+            get => GetValue(EditorProperty) as Editor;
+            set => SetValue(EditorProperty, value);
+        }
+    }
 
+    public sealed partial class MainPage
+    {
         private Graphics.Point _lastPointerPosition;
         private ContentBlock _lastSelectedBlock;
 
         private int _filenameIndex;
         private string _packageName;
+
+        // Offscreen rendering
+        private float _dpiX = 96;
+        private float _dpiY = 96;
 
         public MainPage()
         {
@@ -60,35 +72,44 @@ namespace MyScript.IInk.Demo
             _packageName = "";
 
             InitializeComponent();
-
-            Loaded += UcEditor.UserControl_Loaded;
-            Loaded += Page_Loaded;
-
+            Initialize(App.Engine);
             KeyDown +=  Page_KeyDown;
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private void Initialize(Engine engine)
         {
-            _engine = App.Engine;
-
-            // Folders "conf" and "resources" are currently parts of the layout
-            // (for each conf/res file of the project => properties => "Build Action = content")
-            var confDirs = new string[1];
-            confDirs[0] = "conf";
-            _engine.Configuration.SetStringArray("configuration-manager.search-path", confDirs);
-
-            var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
-            var tempFolder = System.IO.Path.Combine(localFolder, "tmp");
-            _engine.Configuration.SetString("content-package.temp-folder", tempFolder);
-
             // Initialize the editor with the engine
-            UcEditor.Engine = _engine;
+            var info = DisplayInformation.GetForCurrentView();
+            _dpiX = info.RawDpiX;
+            _dpiY = info.RawDpiY;
+            var pixelDensity = UcEditor.GetPixelDensity();
+
+            if (pixelDensity > 0.0f)
+            {
+                _dpiX /= pixelDensity;
+                _dpiY /= pixelDensity;
+            }
+
+            // RawDpi properties can return 0 when the monitor does not provide physical dimensions and when the user is
+            // in a clone or duplicate multiple -monitor setup.
+            if (_dpiX == 0 || _dpiY == 0)
+                _dpiX = _dpiY = 96;
+
+            var renderer = engine.CreateRenderer(_dpiX, _dpiY, UcEditor);
+            renderer.AddListener(new RendererListener(UcEditor));
+            var toolController = engine.CreateToolController();
+            Initialize(Editor = engine.CreateEditor(renderer, toolController));
+
             UcEditor.SmartGuide.MoreClicked += ShowSmartGuideMenu;
 
-            // Force pointer to be a pen, for an automatic detection, set InputMode to AUTO
-            SetInputMode(InputMode.PEN);
-
             NewFile();
+        }
+
+        private void Initialize(Editor editor)
+        {
+            editor.SetViewSize((int)ActualWidth, (int)ActualHeight);
+            editor.SetFontMetricsProvider(new FontMetricsProvider(_dpiX, _dpiY));
+            editor.AddListener(new EditorListener(UcEditor));
         }
 
         private void Page_KeyDown(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
@@ -104,9 +125,9 @@ namespace MyScript.IInk.Demo
                 if (ctrl)
                 {
                     if (shft)
-                        _editor.Redo();
+                        Editor.Redo();
                     else
-                        _editor.Undo();
+                        Editor.Undo();
 
                     e.Handled = true;
                 }
@@ -116,75 +137,35 @@ namespace MyScript.IInk.Demo
             {
                 if (ctrl && !shft)
                 {
-                    _editor.Redo();
+                    Editor.Redo();
                     e.Handled = true;
                 }
             }
         }
 
-        private void SetInputMode(InputMode inputMode)
-        {
-            UcEditor.InputMode = inputMode;
-            penModeToggleButton.IsChecked = (inputMode == InputMode.PEN);
-            touchModeToggleButton.IsChecked = (inputMode == InputMode.TOUCH);
-            autoModeToggleButton.IsChecked = (inputMode == InputMode.AUTO);
-        }
-
         private void AppBar_UndoButton_Click(object sender, RoutedEventArgs e)
         {
-            _editor.Undo();
+            Editor.Undo();
         }
 
         private void AppBar_RedoButton_Click(object sender, RoutedEventArgs e)
         {
-            _editor.Redo();
-        }
-
-        private void AppBar_ClearButton_Click(object sender, RoutedEventArgs e)
-        {
-            _editor.Clear();
+            Editor.Redo();
         }
 
         private async void AppBar_ConvertButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                var supportedStates = _editor.GetSupportedTargetConversionStates(null);
+                var supportedStates = Editor.GetSupportedTargetConversionStates(null);
 
                 if ( (supportedStates != null) && (supportedStates.Count() > 0) )
-                  _editor.Convert(null, supportedStates[0]);
+                  Editor.Convert(null, supportedStates[0]);
             }
             catch (Exception ex)
             {
                 var msgDialog = new MessageDialog(ex.ToString());
                 await msgDialog.ShowAsync();
-            }
-        }
-
-        private void AppBar_PenModeButton_Click(object sender, RoutedEventArgs e)
-        {
-            var isChecked = ((ToggleButton)(sender)).IsChecked;
-            if (isChecked != null && (bool)isChecked)
-            {
-                SetInputMode(InputMode.PEN);
-            }
-        }
-
-        private void AppBar_TouchModeButton_Click(object sender, RoutedEventArgs e)
-        {
-            var isChecked = ((ToggleButton)(sender)).IsChecked;
-            if (isChecked != null && (bool)isChecked)
-            {
-                SetInputMode(InputMode.TOUCH);
-            }
-        }
-
-        private void AppBar_AutoModeButton_Click(object sender, RoutedEventArgs e)
-        {
-            var isChecked = ((ToggleButton)(sender)).IsChecked;
-            if (isChecked != null && (bool)isChecked)
-            {
-                SetInputMode(InputMode.AUTO);
             }
         }
 
@@ -195,7 +176,7 @@ namespace MyScript.IInk.Demo
 
         private async void AppBar_NewPartButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_editor.Part == null)
+            if (Editor.Part == null)
             {
                 NewFile();
                 return;
@@ -208,23 +189,23 @@ namespace MyScript.IInk.Demo
                 _lastSelectedBlock?.Dispose();
                 _lastSelectedBlock = null;
 
-                var previousPart = _editor.Part;
+                var previousPart = Editor.Part;
                 var package = previousPart.Package;
 
                 try
                 {
-                    _editor.Part = null;
+                    Editor.Part = null;
 
                     var part = package.CreatePart(partType);
-                    _editor.Part = part;
+                    Editor.Part = part;
                     Title.Text = _packageName + " - " + part.Type;
 
                     previousPart.Dispose();
                 }
                 catch (Exception ex)
                 {
-                    _editor.Part = previousPart;
-                    Title.Text = _packageName + " - " + _editor.Part.Type;
+                    Editor.Part = previousPart;
+                    Title.Text = _packageName + " - " + Editor.Part.Type;
 
                     var msgDialog = new MessageDialog(ex.ToString());
                     await msgDialog.ShowAsync();
@@ -237,7 +218,7 @@ namespace MyScript.IInk.Demo
 
         private void AppBar_PreviousPartButton_Click(object sender, RoutedEventArgs e)
         {
-            var part = _editor.Part;
+            var part = Editor.Part;
 
             if (part != null)
             {
@@ -248,7 +229,7 @@ namespace MyScript.IInk.Demo
                 {
                     _lastSelectedBlock?.Dispose();
                     _lastSelectedBlock = null;
-                    _editor.Part = null;
+                    Editor.Part = null;
 
                     while (--index >= 0)
                     {
@@ -258,7 +239,7 @@ namespace MyScript.IInk.Demo
                         {
                             // Select new part
                             newPart = part.Package.GetPart(index);
-                            _editor.Part = newPart;
+                            Editor.Part = newPart;
                             Title.Text = _packageName + " - " + newPart.Type;
                             part.Dispose();
                             break;
@@ -266,7 +247,7 @@ namespace MyScript.IInk.Demo
                         catch
                         {
                             // Can't set this part, try the previous one
-                            _editor.Part = null;
+                            Editor.Part = null;
                             Title.Text = "";
                             newPart?.Dispose();
                         }
@@ -275,7 +256,7 @@ namespace MyScript.IInk.Demo
                     if (index < 0)
                     {
                         // Restore current part if none can be set
-                        _editor.Part = part;
+                        Editor.Part = part;
                         Title.Text = _packageName + " - " + part.Type;
                     }
 
@@ -287,7 +268,7 @@ namespace MyScript.IInk.Demo
 
         private void AppBar_NextPartButton_Click(object sender, RoutedEventArgs e)
         {
-            var part = _editor.Part;
+            var part = Editor.Part;
 
             if (part != null)
             {
@@ -299,7 +280,7 @@ namespace MyScript.IInk.Demo
                 {
                     _lastSelectedBlock?.Dispose();
                     _lastSelectedBlock = null;
-                    _editor.Part = null;
+                    Editor.Part = null;
 
                     while (++index < count)
                     {
@@ -309,7 +290,7 @@ namespace MyScript.IInk.Demo
                         {
                             // Select new part
                             newPart = part.Package.GetPart(index);
-                            _editor.Part = newPart;
+                            Editor.Part = newPart;
                             Title.Text = _packageName + " - " + newPart.Type;
                             part.Dispose();
                             break;
@@ -317,7 +298,7 @@ namespace MyScript.IInk.Demo
                         catch
                         {
                             // Can't set this part, try the next one
-                            _editor.Part = null;
+                            Editor.Part = null;
                             Title.Text = "";
                             newPart?.Dispose();
                         }
@@ -326,7 +307,7 @@ namespace MyScript.IInk.Demo
                     if (index >= count)
                     {
                         // Restore current part if none can be set
-                        _editor.Part = part;
+                        Editor.Part = part;
                         Title.Text = _packageName + " - " + part.Type;
                     }
 
@@ -396,9 +377,9 @@ namespace MyScript.IInk.Demo
                 ClosePackage();
 
                 // Open package and select first part
-                var package = _engine.OpenPackage(filePath);
+                var package = Editor.Engine.OpenPackage(filePath);
                 var part = package.GetPart(0);
-                _editor.Part = part;
+                Editor.Part = part;
                 _packageName = fileName;
                 Title.Text = _packageName + " - " + part.Type;
             }
@@ -418,7 +399,7 @@ namespace MyScript.IInk.Demo
         {
             try
             {
-                var part = _editor.Part;
+                var part = Editor.Part;
                 var package = part?.Package;
                 package?.Save();
             }
@@ -483,7 +464,7 @@ namespace MyScript.IInk.Demo
                 filePath = System.IO.Path.Combine(localFolder.Path.ToString(), fileName);
             }
 
-            var part = _editor.Part;
+            var part = Editor.Part;
             if (part != null)
             {
                 try
@@ -505,11 +486,11 @@ namespace MyScript.IInk.Demo
 
         private void DisplayContextualMenu(Windows.Foundation.Point globalPos)
         {
-            var part = _editor.Part;
-            if (_editor.Part == null)
+            var part = Editor.Part;
+            if (Editor.Part == null)
                 return;
 
-            using (var rootBlock = _editor.GetRootBlock())
+            using (var rootBlock = Editor.GetRootBlock())
             {
                 var contentBlock = _lastSelectedBlock;
                 if (contentBlock == null)
@@ -522,12 +503,12 @@ namespace MyScript.IInk.Demo
                 var onRawContent = part.Type == "Raw Content";
                 var onTextDocument = part.Type == "Text Document";
 
-                var isEmpty = _editor.IsEmpty(contentBlock);
+                var isEmpty = Editor.IsEmpty(contentBlock);
 
-                var supportedTypes = _editor.SupportedAddBlockTypes;
-                var supportedExports = _editor.GetSupportedExportMimeTypes(onRawContent ? rootBlock : contentBlock);
-                var supportedImports = _editor.GetSupportedImportMimeTypes(contentBlock);
-                var supportedStates = _editor.GetSupportedTargetConversionStates(contentBlock);
+                var supportedTypes = Editor.SupportedAddBlockTypes;
+                var supportedExports = Editor.GetSupportedExportMimeTypes(onRawContent ? rootBlock : contentBlock);
+                var supportedImports = Editor.GetSupportedImportMimeTypes(contentBlock);
+                var supportedStates = Editor.GetSupportedTargetConversionStates(contentBlock);
 
                 var hasTypes = (supportedTypes != null) && supportedTypes.Any();
                 var hasExports = (supportedExports != null) && supportedExports.Any();
@@ -653,12 +634,12 @@ namespace MyScript.IInk.Demo
 
             _lastPointerPosition = new Graphics.Point((float)pos.X, (float)pos.Y);
             _lastSelectedBlock?.Dispose();
-            _lastSelectedBlock = _editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
+            _lastSelectedBlock = Editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
 
             if ( (_lastSelectedBlock == null) || (_lastSelectedBlock.Type == "Container") )
             {
                 _lastSelectedBlock?.Dispose();
-                _lastSelectedBlock = _editor.GetRootBlock();
+                _lastSelectedBlock = Editor.GetRootBlock();
             }
 
             // Discard current stroke
@@ -684,12 +665,12 @@ namespace MyScript.IInk.Demo
 
             _lastPointerPosition = new Graphics.Point((float)pos.X, (float)pos.Y);
             _lastSelectedBlock?.Dispose();
-            _lastSelectedBlock = _editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
+            _lastSelectedBlock = Editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
 
             if ( (_lastSelectedBlock == null) || (_lastSelectedBlock.Type == "Container") )
             {
                 _lastSelectedBlock?.Dispose();
-                _lastSelectedBlock = _editor.GetRootBlock();
+                _lastSelectedBlock = Editor.GetRootBlock();
             }
 
             if (_lastSelectedBlock != null)
@@ -715,12 +696,12 @@ namespace MyScript.IInk.Demo
 
             _lastPointerPosition = new Graphics.Point((float)p.Position.X, (float)p.Position.Y);
             _lastSelectedBlock?.Dispose();
-            _lastSelectedBlock = _editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
+            _lastSelectedBlock = Editor.HitBlock(_lastPointerPosition.X, _lastPointerPosition.Y);
 
             if ( (_lastSelectedBlock == null) || (_lastSelectedBlock.Type == "Container") )
             {
                 _lastSelectedBlock?.Dispose();
-                _lastSelectedBlock = _editor.GetRootBlock();
+                _lastSelectedBlock = Editor.GetRootBlock();
             }
 
             if (_lastSelectedBlock != null)
@@ -747,10 +728,10 @@ namespace MyScript.IInk.Demo
             {
                 if (_lastSelectedBlock != null)
                 {
-                    var supportedStates = _editor.GetSupportedTargetConversionStates(_lastSelectedBlock);
+                    var supportedStates = Editor.GetSupportedTargetConversionStates(_lastSelectedBlock);
 
                     if ( (supportedStates != null) && (supportedStates.Count() > 0) )
-                        _editor.Convert(_lastSelectedBlock, supportedStates[0]);
+                        Editor.Convert(_lastSelectedBlock, supportedStates[0]);
                 }
             }
             catch (Exception ex)
@@ -766,12 +747,12 @@ namespace MyScript.IInk.Demo
             {
               // Uses Id as block type
               var blockType = command.Id.ToString();
-              var mimeTypes = _editor.GetSupportedAddBlockDataMimeTypes(blockType);
+              var mimeTypes = Editor.GetSupportedAddBlockDataMimeTypes(blockType);
               var useDialog = (mimeTypes != null) && (mimeTypes.Count() > 0);
 
               if (!useDialog)
               {
-                  _editor.AddBlock(_lastPointerPosition.X, _lastPointerPosition.Y, blockType);
+                  Editor.AddBlock(_lastPointerPosition.X, _lastPointerPosition.Y, blockType);
                   UcEditor.Invalidate(LayerType.LayerType_ALL);
               }
               else
@@ -785,7 +766,7 @@ namespace MyScript.IInk.Demo
 
                     if ( (idx >= 0) && (idx < mimeTypes.Count()) && (String.IsNullOrWhiteSpace(data) == false) )
                     {
-                      _editor.AddBlock(_lastPointerPosition.X, _lastPointerPosition.Y, blockType, mimeTypes[idx], data);
+                      Editor.AddBlock(_lastPointerPosition.X, _lastPointerPosition.Y, blockType, mimeTypes[idx], data);
                       UcEditor.Invalidate(LayerType.LayerType_ALL);
                     }
                 }
@@ -809,7 +790,7 @@ namespace MyScript.IInk.Demo
             {
                 if (_lastSelectedBlock != null && _lastSelectedBlock.Type != "Container")
                 {
-                    _editor.RemoveBlock(_lastSelectedBlock);
+                    Editor.RemoveBlock(_lastSelectedBlock);
                     _lastSelectedBlock.Dispose();
                     _lastSelectedBlock = null;
                 }
@@ -826,7 +807,7 @@ namespace MyScript.IInk.Demo
             try
             {
                 if (_lastSelectedBlock != null)
-                    _editor.Copy(_lastSelectedBlock);
+                    Editor.Copy(_lastSelectedBlock);
             }
             catch (Exception ex)
             {
@@ -839,7 +820,7 @@ namespace MyScript.IInk.Demo
         {
             try
             {
-                _editor.Paste(_lastPointerPosition.X, _lastPointerPosition.Y);
+                Editor.Paste(_lastPointerPosition.X, _lastPointerPosition.Y);
             }
             catch (Exception ex)
             {
@@ -850,14 +831,14 @@ namespace MyScript.IInk.Demo
 
         private async void Popup_CommandHandler_Import(FlyoutCommand command)
         {
-            var part = _editor.Part;
+            var part = Editor.Part;
             if (part == null)
                 return;
 
             if (_lastSelectedBlock == null)
                 return;
 
-            var mimeTypes = _editor.GetSupportedImportMimeTypes(_lastSelectedBlock);
+            var mimeTypes = Editor.GetSupportedImportMimeTypes(_lastSelectedBlock);
 
             if (mimeTypes == null)
                 return;
@@ -876,7 +857,7 @@ namespace MyScript.IInk.Demo
                 {
                     try
                     {
-                        _editor.Import_(mimeTypes[idx], data, _lastSelectedBlock);
+                        Editor.Import_(mimeTypes[idx], data, _lastSelectedBlock);
                     }
                     catch (Exception ex)
                     {
@@ -890,11 +871,11 @@ namespace MyScript.IInk.Demo
 
         private async void Popup_CommandHandler_Export(FlyoutCommand command)
         {
-            var part = _editor.Part;
+            var part = Editor.Part;
             if (part == null)
                 return;
 
-            using (var rootBlock = _editor.GetRootBlock())
+            using (var rootBlock = Editor.GetRootBlock())
             {
                 var onRawContent = part.Type == "Raw Content";
                 var contentBlock = onRawContent ? rootBlock : _lastSelectedBlock;
@@ -902,7 +883,7 @@ namespace MyScript.IInk.Demo
                 if (contentBlock == null)
                     return;
 
-                var mimeTypes = _editor.GetSupportedExportMimeTypes(contentBlock);
+                var mimeTypes = Editor.GetSupportedExportMimeTypes(contentBlock);
 
                 if (mimeTypes == null)
                     return;
@@ -946,8 +927,8 @@ namespace MyScript.IInk.Demo
 
                         drawer.ImageLoader = UcEditor.ImageLoader;
 
-                        _editor.WaitForIdle();
-                        _editor.Export_(contentBlock, filePath, drawer);
+                        Editor.WaitForIdle();
+                        Editor.Export_(contentBlock, filePath, drawer);
 
                         var file = await StorageFile.GetFileFromPathAsync(filePath);
                         await Windows.System.Launcher.LaunchFileAsync(file);
@@ -968,7 +949,7 @@ namespace MyScript.IInk.Demo
                 MimeType[] mimeTypes = null;
 
                 if (_lastSelectedBlock != null)
-                    mimeTypes = _editor.GetSupportedExportMimeTypes(_lastSelectedBlock);
+                    mimeTypes = Editor.GetSupportedExportMimeTypes(_lastSelectedBlock);
 
                 if (mimeTypes != null && mimeTypes.Contains(MimeType.OFFICE_CLIPBOARD))
                 {
@@ -979,7 +960,7 @@ namespace MyScript.IInk.Demo
 
                     drawer.ImageLoader = UcEditor.ImageLoader;
 
-                    _editor.Export_(_lastSelectedBlock, clipboardPath.ToString(), MimeType.OFFICE_CLIPBOARD, drawer);
+                    Editor.Export_(_lastSelectedBlock, clipboardPath.ToString(), MimeType.OFFICE_CLIPBOARD, drawer);
 
                     // read back exported data
                     var clipboardData = File.ReadAllBytes(clipboardPath);
@@ -1001,16 +982,16 @@ namespace MyScript.IInk.Demo
 
         private void SavePackage()
         {
-            var part = _editor.Part;
+            var part = Editor.Part;
             var package = part?.Package;
             package?.Save();
         }
 
         private void ClosePackage()
         {
-            var part = _editor.Part;
+            var part = Editor.Part;
             var package = part?.Package;
-            _editor.Part = null;
+            Editor.Part = null;
             part?.Dispose();
             package?.Dispose();
             Title.Text = "";
@@ -1018,7 +999,7 @@ namespace MyScript.IInk.Demo
 
         private async void NewFile()
         {
-            var cancelable = _editor.Part != null;
+            var cancelable = Editor.Part != null;
             var partType = await ChoosePartType(cancelable);
             if (string.IsNullOrEmpty(partType))
                 return;
@@ -1034,9 +1015,9 @@ namespace MyScript.IInk.Demo
 
                 // Create package and part
                 var packageName = MakeUntitledFilename();
-                var package = _engine.CreatePackage(packageName);
+                var package = Editor.Engine.CreatePackage(packageName);
                 var part = package.CreatePart(partType);
-                _editor.Part = part;
+                Editor.Part = part;
                 _packageName = System.IO.Path.GetFileName(packageName);
                 Title.Text = _packageName + " - " + part.Type;
             }
@@ -1052,7 +1033,7 @@ namespace MyScript.IInk.Demo
         private string MakeUntitledFilename()
         {
             var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
-            var tempFolder = _engine.Configuration.GetString("content-package.temp-folder");
+            var tempFolder = Editor.Engine.Configuration.GetString("content-package.temp-folder");
             string fileName;
             string folderName;
 
@@ -1071,7 +1052,7 @@ namespace MyScript.IInk.Demo
 
         private async System.Threading.Tasks.Task<string> ChoosePartType(bool cancelable)
         {
-            var types = _engine.SupportedPartTypes.ToList();
+            var types = Editor.Engine.SupportedPartTypes.ToList();
 
             if (types.Count == 0)
                 return null;

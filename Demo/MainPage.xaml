@@ -1,66 +1,65 @@
-﻿<Page
-    x:Class="MyScript.IInk.Demo.MainPage"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:MyScript.IInk"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:Uc="using:MyScript.IInk.UIReferenceImplementation.UserControls"
-    xmlns:Win2Dcanvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
-    mc:Ignorable="d">
+﻿<Page x:Class="MyScript.IInk.Demo.MainPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:Uc="using:MyScript.IInk.UIReferenceImplementation.UserControls"
+      mc:Ignorable="d">
 
-  <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <Grid.RowDefinitions>
-      <RowDefinition Height="auto"></RowDefinition>
-      <RowDefinition Height="*"></RowDefinition>
-    </Grid.RowDefinitions>
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-    <CommandBar>
-      <AppBarButton Icon="Undo" Label="Undo" Click="AppBar_UndoButton_Click"/>
-      <AppBarButton Icon="Redo" Label="Redo" Click="AppBar_RedoButton_Click"/>
-      <AppBarButton Icon="Delete" Label="Clear" Click="AppBar_ClearButton_Click"/>
-      <AppBarSeparator/>
-      <AppBarButton Icon="Add" Label="New part" Click="AppBar_NewPartButton_Click"/>
-      <AppBarButton Icon="Back" Label="Previous part" Click="AppBar_PreviousPartButton_Click" />
-      <AppBarButton Icon="Forward" Label="Next part" Click="AppBar_NextPartButton_Click"/>
-      <AppBarSeparator/>
-      <AppBarButton Icon="ZoomIn" Label="Zoom in" Click="AppBar_ZoomInButton_Click"/>
-      <AppBarButton Icon="ZoomOut" Label="Zoom out" Click="AppBar_ZoomOutButton_Click"/>
+        <CommandBar>
+            <AppBarButton Icon="Undo" Label="Undo" Click="AppBar_UndoButton_Click" />
+            <AppBarButton Icon="Redo" Label="Redo" Click="AppBar_RedoButton_Click" />
+            <AppBarSeparator />
+            <AppBarButton Icon="Add" Label="New part" Click="AppBar_NewPartButton_Click" />
+            <AppBarButton Icon="Back" Label="Previous part" Click="AppBar_PreviousPartButton_Click" />
+            <AppBarButton Icon="Forward" Label="Next part" Click="AppBar_NextPartButton_Click" />
+            <AppBarSeparator />
+            <AppBarButton Icon="ZoomIn" Label="Zoom in" Click="AppBar_ZoomInButton_Click" />
+            <AppBarButton Icon="ZoomOut" Label="Zoom out" Click="AppBar_ZoomOutButton_Click" />
 
-      <CommandBar.SecondaryCommands>
-        <AppBarButton Label="Reset view" Click="AppBar_ResetViewButton_Click"/>
-        <AppBarButton Label="Convert" Click="AppBar_ConvertButton_Click" />
-        <AppBarSeparator/>
-        <AppBarButton Icon="NewFolder" Label="New" Click="AppBar_NewPackageButton_Click"/>
-        <AppBarButton Icon="OpenFile" Label="Open" Click="AppBar_OpenPackageButton_Click"/>
-        <AppBarButton Icon="Save" Label="Save" Click="AppBar_SavePackageButton_Click"/>
-        <AppBarButton Icon="SaveLocal" Label="Save as" Click="AppBar_SaveAsButton_Click"/>
-        <AppBarSeparator/>
-        <AppBarToggleButton Label="Smart Guide" IsChecked="True" Click="AppBar_EnableSmartGuide_Click"/>
-      </CommandBar.SecondaryCommands>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton Label="Reset view" Click="AppBar_ResetViewButton_Click" />
+                <AppBarButton Label="Convert" Click="AppBar_ConvertButton_Click" />
+                <AppBarSeparator />
+                <AppBarButton Icon="NewFolder" Label="New" Click="AppBar_NewPackageButton_Click" />
+                <AppBarButton Icon="OpenFile" Label="Open" Click="AppBar_OpenPackageButton_Click" />
+                <AppBarButton Icon="Save" Label="Save" Click="AppBar_SavePackageButton_Click" />
+                <AppBarButton Icon="SaveLocal" Label="Save as" Click="AppBar_SaveAsButton_Click" />
+                <AppBarSeparator />
+                <AppBarToggleButton Label="Smart Guide" IsChecked="True" Click="AppBar_EnableSmartGuide_Click" />
+            </CommandBar.SecondaryCommands>
 
-      <CommandBar.Content>
-        <TextBlock x:Name="Title" Margin="12,14" FontFamily="bold" FontSize="16"/>
-      </CommandBar.Content>
-    </CommandBar>
+            <CommandBar.Content>
+                <TextBlock x:Name="Title" Margin="12,14" FontFamily="bold" FontSize="16" />
+            </CommandBar.Content>
+        </CommandBar>
 
-    <Uc:EditorUserControl Grid.Row="1" x:Name="UcEditor"
-                          Holding="UcEditor_Holding"
-                          PointerPressed="UcEditor_RightDown"
-                          RightTapped="UcEditor_RightTapped">
-    </Uc:EditorUserControl>
+        <ToggleSwitch Grid.Row="1"
+                      Header="Active Pen"
+                      HorizontalAlignment="Left"
+                      IsOn="{x:Bind InkToolbar.IsActivePenEnabled, Mode=TwoWay}"
+                      Margin="12 0"
+                      OffContent="Off"
+                      OnContent="On" />
 
-    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8">
-      <ToggleButton Margin="2" x:Name="penModeToggleButton" Click="AppBar_PenModeButton_Click">
-        <TextBlock HorizontalAlignment="Center" Text="Pen" />
-      </ToggleButton>
-      <ToggleButton Margin="2" x:Name="touchModeToggleButton" Click="AppBar_TouchModeButton_Click">
-        <TextBlock HorizontalAlignment="Center" Text="Touch" />
-      </ToggleButton>
-      <ToggleButton Margin="2" x:Name="autoModeToggleButton"  Click="AppBar_AutoModeButton_Click">
-        <TextBlock HorizontalAlignment="Center" Text="Auto" />
-      </ToggleButton>
-    </StackPanel>
+        <Uc:InkToolbar x:Name="InkToolbar"
+                       Grid.Row="1"
+                       Background="Transparent"
+                       Editor="{x:Bind Editor, Mode=OneWay}"
+                       HorizontalAlignment="Center" />
 
-  </Grid>
+        <Uc:EditorUserControl Grid.Row="2"
+                              x:Name="UcEditor"
+                              Editor="{x:Bind Editor, Mode=OneWay}"
+                              Holding="UcEditor_Holding"
+                              PointerPressed="UcEditor_RightDown"
+                              RightTapped="UcEditor_RightTapped" />
+    </Grid>
 </Page>

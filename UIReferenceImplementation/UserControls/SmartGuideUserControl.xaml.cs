@@ -40,6 +40,10 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
     /// </summary>
     public sealed partial class SmartGuideUserControl : UserControl
     {
+        public static readonly DependencyProperty EditorProperty =
+            DependencyProperty.Register("Editor", typeof(Editor), typeof(SmartGuideUserControl),
+                new PropertyMetadata(default(Editor)));
+
         private class Word
         {
             public string Label;
@@ -76,8 +80,6 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         public delegate void MoreClickedHandler(Point globalPos);
 
-        private Editor _editor;
-
         private event MoreClickedHandler _moreClicked;
 
         private ContentBlock _activeBlock;
@@ -103,8 +105,25 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         public Editor Editor
         {
-            get { return _editor; }
-            set { SetEditor(value); }
+            get => GetValue(EditorProperty) as Editor;
+            set
+            {
+                SetValue(EditorProperty, value);
+                if (!(Editor is Editor editor)) return;
+                var configuration = editor.Engine.Configuration;
+                fadeOutWriteInDiagramDelay = (int)configuration.GetNumber("smart-guide.fade-out-delay.write-in-diagram", SMART_GUIDE_FADE_OUT_DELAY_WRITE_IN_DIAGRAM_DEFAULT);
+                fadeOutWriteDelay = (int)configuration.GetNumber("smart-guide.fade-out-delay.write", SMART_GUIDE_FADE_OUT_DELAY_WRITE_OTHER_DEFAULT);
+                fadeOutOtherDelay = (int)configuration.GetNumber("smart-guide.fade-out-delay.other", SMART_GUIDE_FADE_OUT_DELAY_OTHER_DEFAULT);
+                removeHighlightDelay = (int)configuration.GetNumber("smart-guide.highlight-removal-delay", SMART_GUIDE_HIGHLIGHT_REMOVAL_DELAY_DEFAULT);
+
+                _exportParams = editor.Engine.CreateParameterSet();
+                _exportParams?.SetBoolean("export.jiix.text.words", true);
+                _exportParams?.SetBoolean("export.jiix.strokes", false);
+                _exportParams?.SetBoolean("export.jiix.bounding-box", false);
+                _exportParams?.SetBoolean("export.jiix.glyphs", false);
+                _exportParams?.SetBoolean("export.jiix.primitives", false);
+                _exportParams?.SetBoolean("export.jiix.chars", false);
+            }
         }
 
         public event MoreClickedHandler MoreClicked
@@ -175,25 +194,6 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             moreItem.Visibility = (_moreClicked != null) ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private void SetEditor(Editor editor)
-        {
-            _editor = editor;
-
-            Configuration configuration = _editor.Engine.Configuration;
-            fadeOutWriteInDiagramDelay = (int)configuration.GetNumber("smart-guide.fade-out-delay.write-in-diagram", SMART_GUIDE_FADE_OUT_DELAY_WRITE_IN_DIAGRAM_DEFAULT);
-            fadeOutWriteDelay = (int)configuration.GetNumber("smart-guide.fade-out-delay.write", SMART_GUIDE_FADE_OUT_DELAY_WRITE_OTHER_DEFAULT);
-            fadeOutOtherDelay = (int)configuration.GetNumber("smart-guide.fade-out-delay.other", SMART_GUIDE_FADE_OUT_DELAY_OTHER_DEFAULT);
-            removeHighlightDelay = (int)configuration.GetNumber("smart-guide.highlight-removal-delay", SMART_GUIDE_HIGHLIGHT_REMOVAL_DELAY_DEFAULT);
-
-            _exportParams = _editor.Engine.CreateParameterSet();
-            _exportParams?.SetBoolean("export.jiix.text.words", true);
-            _exportParams?.SetBoolean("export.jiix.strokes", false);
-            _exportParams?.SetBoolean("export.jiix.bounding-box", false);
-            _exportParams?.SetBoolean("export.jiix.glyphs", false);
-            _exportParams?.SetBoolean("export.jiix.primitives", false);
-            _exportParams?.SetBoolean("export.jiix.chars", false);
-        }
-
         private static List<Word> CloneWords(List<Word> from)
         {
             if (from == null)
@@ -258,7 +258,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
                 try
                 {
-                    jiixStr = _editor.Export_(_currentBlock, MimeType.JIIX, _exportParams);
+                    jiixStr = Editor.Export_(_currentBlock, MimeType.JIIX, _exportParams);
                 }
                 catch
                 {
@@ -385,7 +385,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 var rectangle = _currentBlock.Box;
                 float paddingLeft, paddingRight;
                 GetBlockPadding(_currentBlock, out paddingLeft, out paddingRight);
-                var transform = _editor.Renderer.GetViewTransform();
+                var transform = Editor.Renderer.GetViewTransform();
                 var topLeft = transform.Apply(rectangle.X + paddingLeft, rectangle.Y);
                 var topRight = transform.Apply(rectangle.X + rectangle.Width - paddingRight, rectangle.Y);
                 var x = topLeft.X;
@@ -508,7 +508,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         public void OnContentChanged(string[] blockIds)
         {
-            if (_editor == null)
+            if (Editor == null)
             {
                 ResetWidgets();
                 return;
@@ -520,7 +520,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             {
                 var activeBlockId = _activeBlock.Id;
                 _activeBlock?.Dispose();
-                _activeBlock = _editor.GetBlockById(activeBlockId);
+                _activeBlock = Editor.GetBlockById(activeBlockId);
 
                 if (_activeBlock == null)
                     ResetWidgets();
@@ -549,7 +549,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             {
                 foreach (var blockId in blockIds)
                 {
-                    using (var block_ = _editor.GetBlockById(blockId))
+                    using (var block_ = Editor.GetBlockById(blockId))
                     {
                         if ((block_ != null) && (block_.Type == "Text"))
                         {
@@ -589,7 +589,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         public void OnActiveBlockChanged(string blockId)
         {
             _activeBlock?.Dispose();
-            _activeBlock = _editor.GetBlockById(blockId);
+            _activeBlock = Editor.GetBlockById(blockId);
 
             if ( (_currentBlock != null) && (_activeBlock != null) && (_currentBlock.Id == _activeBlock.Id) )
                 return; // selectionChanged already changed the active block
@@ -837,13 +837,13 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         {
             try
             {
-                var jiixStr = _editor.Export_(_currentBlock, MimeType.JIIX, _exportParams);
+                var jiixStr = Editor.Export_(_currentBlock, MimeType.JIIX, _exportParams);
                 var jiix = JsonValue.Parse(jiixStr) as JsonObject;
                 var jiixWords = (JsonArray)jiix["words"];
                 var jiixWord = (JsonObject)jiixWords[command.WordIndex];
                 jiixWord["label"] = command.Label;
                 jiixStr = jiix.ToString();
-                _editor.Import_(MimeType.JIIX, jiixStr, _currentBlock);
+                Editor.Import_(MimeType.JIIX, jiixStr, _currentBlock);
                 _currentWords[command.WordIndex].Label = command.Label;
                 command.WordView.Text = command.Label;
             }

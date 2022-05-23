@@ -21,6 +21,19 @@ namespace MyScript.IInk.Demo
             UnhandledException += OnUnhandledException;
         }
 
+        private static void Initialize(Engine engine)
+        {
+            // Folders "conf" and "resources" are currently parts of the layout
+            // (for each conf/res file of the project => properties => "Build Action = content")
+            var confDirs = new string[1];
+            confDirs[0] = "conf";
+            engine.Configuration.SetStringArray("configuration-manager.search-path", confDirs);
+
+            var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
+            var tempFolder = System.IO.Path.Combine(localFolder, "tmp");
+            engine.Configuration.SetString("content-package.temp-folder", tempFolder);
+        }
+
         private static async void OnUnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
         {
             e.Handled = true;
@@ -47,7 +60,7 @@ namespace MyScript.IInk.Demo
             try
             {
                 // Initialize Interactive Ink runtime environment
-                Engine = Engine.Create((byte[])(Array)Certificate.MyCertificate.Bytes);
+                Initialize(Engine = Engine.Create((byte[])(Array)Certificate.MyCertificate.Bytes));
             }
             catch (Exception err)
             {

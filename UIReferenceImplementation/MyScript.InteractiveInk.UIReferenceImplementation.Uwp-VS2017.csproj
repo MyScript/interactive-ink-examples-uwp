@@ -65,14 +65,23 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Canvas.cs" />
+    <Compile Include="Constants\StyleKeys.cs" />
+    <Compile Include="Converters\BoolNegationConverter.cs" />
+    <Compile Include="EditorListener.cs" />
+    <Compile Include="Extensions\Primitives.cs" />
+    <Compile Include="Extensions\SDK.cs" />
     <Compile Include="FontMetricsProvider.cs" />
     <Compile Include="ImageDrawer.cs" />
     <Compile Include="ImageLoader.cs" />
     <Compile Include="Layer.cs" />
     <Compile Include="Path.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RendererListener.cs" />
     <Compile Include="UserControls\EditorUserControl.xaml.cs">
       <DependentUpon>EditorUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\InkToolbar.xaml.cs">
+      <DependentUpon>InkToolbar.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\SmartGuideUserControl.xaml.cs">
       <DependentUpon>SmartGuideUserControl.xaml</DependentUpon>
@@ -81,6 +90,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="UserControls\EditorUserControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UserControls\InkToolbar.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
