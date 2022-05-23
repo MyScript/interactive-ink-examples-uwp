@@ -49,7 +49,7 @@
                           PointerPressed="UcEditor_RightDown"
                           RightTapped="UcEditor_RightTapped">
     </Uc:EditorUserControl>
-    
+
     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8">
       <ToggleButton Margin="2" x:Name="penModeToggleButton" Click="AppBar_PenModeButton_Click">
         <TextBlock HorizontalAlignment="Center" Text="Pen" />

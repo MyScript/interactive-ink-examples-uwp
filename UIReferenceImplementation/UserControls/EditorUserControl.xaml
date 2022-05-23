@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="MyScript.IInk.UIReferenceImplementation.UserControls.EditorUserControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -10,11 +10,11 @@
     >
   <Grid>
         <Win2Dcanvas:CanvasVirtualControl x:Name="modelCanvas"
-                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                                           RegionsInvalidated="Canvas_OnRegionsInvalidated"
                                           SizeChanged="Canvas_SizeChanged"/>
         <Win2Dcanvas:CanvasVirtualControl x:Name="captureCanvas"
-                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                                           RegionsInvalidated="Canvas_OnRegionsInvalidated"
                                           SizeChanged="Canvas_SizeChanged"
                                           PointerCanceled="Capture_PointerCanceled"

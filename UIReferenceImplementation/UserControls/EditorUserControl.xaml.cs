@@ -174,7 +174,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             var info = DisplayInformation.GetForCurrentView();
             _dpiX = info.RawDpiX;
             var dpiY = info.RawDpiY;
-            
+
             if (info.RawPixelsPerViewPixel > 0.0)
                 _pixelDensity = (float)info.RawPixelsPerViewPixel;
             else if (info.ResolutionScale != ResolutionScale.Invalid)

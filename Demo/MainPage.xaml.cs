@@ -644,7 +644,7 @@ namespace MyScript.IInk.Demo
 
             if (e.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
                 return;
-            
+
             if (e.HoldingState != Windows.UI.Input.HoldingState.Started)
                 return;
 
@@ -768,7 +768,7 @@ namespace MyScript.IInk.Demo
               var blockType = command.Id.ToString();
               var mimeTypes = _editor.GetSupportedAddBlockDataMimeTypes(blockType);
               var useDialog = (mimeTypes != null) && (mimeTypes.Count() > 0);
-                
+
               if (!useDialog)
               {
                   _editor.AddBlock(_lastPointerPosition.X, _lastPointerPosition.Y, blockType);
@@ -884,7 +884,7 @@ namespace MyScript.IInk.Demo
                         await msgDialog.ShowAsync();
                     }
                 }
-              
+
             }
         }
 
@@ -966,7 +966,7 @@ namespace MyScript.IInk.Demo
             try
             {
                 MimeType[] mimeTypes = null;
-                
+
                 if (_lastSelectedBlock != null)
                     mimeTypes = _editor.GetSupportedExportMimeTypes(_lastSelectedBlock);
 

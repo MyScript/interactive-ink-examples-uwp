@@ -17,4 +17,4 @@ namespace MyScript.Certificate
 
   } // end of: class MyCertificate
 
-} // end of: namespace 
+} // end of: namespace

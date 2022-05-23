@@ -27,7 +27,7 @@
 <Directives xmlns="http://schemas.microsoft.com/netfx/2013/01/metadata">
   <Library Name="iink_sdk_examples_uwp.UIRefImpl">
 
-  	<!-- ajoutez ici les directives pour votre bibliothèque -->
+    <!-- ajoutez ici les directives pour votre bibliothèque -->
 
   </Library>
 </Directives>

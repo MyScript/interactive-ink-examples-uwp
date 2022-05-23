@@ -7,13 +7,13 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:Uc="using:MyScript.IInk.UIReferenceImplementation.UserControls"
     mc:Ignorable="d">
-    
+
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Grid.RowDefinitions>
       <RowDefinition Height="auto"></RowDefinition>
       <RowDefinition Height="*"></RowDefinition>
     </Grid.RowDefinitions>
-    <CommandBar>            
+    <CommandBar>
             <AppBarButton Icon="Undo" Label="Undo" Click="AppBar_UndoButton_Click"/>
             <AppBarButton Icon="Redo" Label="Redo" Click="AppBar_RedoButton_Click"/>
             <AppBarButton Icon="Delete" Label="Clear" Click="AppBar_ClearButton_Click"/>
@@ -26,7 +26,7 @@
         </CommandBar>
 
     <Uc:EditorUserControl Grid.Row="1"  x:Name="UcEditor"></Uc:EditorUserControl>
-      
+
     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8">
       <ToggleButton Margin="2" x:Name="editToggleButton" Click="AppBar_EditButton_Click">
         <TextBlock HorizontalAlignment="Center" Text="Pen" />
