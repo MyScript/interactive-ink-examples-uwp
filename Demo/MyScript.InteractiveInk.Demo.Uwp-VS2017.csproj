@@ -99,6 +99,18 @@
     <Content Include="..\recognition-assets\conf\math.conf">
       <Link>conf\math.conf</Link>
     </Content>
+    <Content Include="..\fonts\MyScriptInter-Bold.otf">
+      <Link>fonts\MyScriptInter-Bold.otf</Link>
+    </Content>
+    <Content Include="..\fonts\MyScriptInter-Regular.otf">
+      <Link>fonts\MyScriptInter-Regular.otf</Link>
+    </Content>
+    <Content Include="..\fonts\STIX-Italic.otf">
+      <Link>fonts\STIX-Italic.otf</Link>
+    </Content>
+    <Content Include="..\fonts\STIXGeneral.ttf">
+      <Link>fonts\STIXGeneral.ttf</Link>
+    </Content>
     <Content Include="..\recognition-assets\resources\analyzer\ank-diagram.res">
       <Link>resources\analyzer\ank-diagram.res</Link>
     </Content>

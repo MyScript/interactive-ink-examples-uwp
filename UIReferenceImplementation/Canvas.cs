@@ -217,28 +217,9 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         public void SetFontProperties(string family, float lineHeight, float size, string style, string variant, int weight)
         {
-            _fontProperties.FontFamily = FontMetricsProvider.toPlatformFontFamily(family, style);
-
-            switch (style)
-            {
-                case "oblique":
-                    _fontProperties.FontStyle = Windows.UI.Text.FontStyle.Oblique;
-                    break;
-                case "italic":
-                    _fontProperties.FontStyle = Windows.UI.Text.FontStyle.Italic;
-                    break;
-                default: // "normal"
-                    _fontProperties.FontStyle = Windows.UI.Text.FontStyle.Normal;
-                    break;
-            }
-
-            if (weight >= 700)
-                _fontProperties.FontWeight = Windows.UI.Text.FontWeights.Bold;
-            else if (weight >= 400)
-                _fontProperties.FontWeight = Windows.UI.Text.FontWeights.Normal;
-            else
-                _fontProperties.FontWeight = Windows.UI.Text.FontWeights.Light;
-
+            _fontProperties.FontFamily = FontMetricsProvider.ToPlatformFontFamily(family, style, weight);
+            _fontProperties.FontStyle = FontMetricsProvider.ToPlatformFontStyle(style);
+            _fontProperties.FontWeight = FontMetricsProvider.ToPlatformFontWeight(weight);
             _fontProperties.FontSize = size;
 
             using (var canvasTextLayout = new CanvasTextLayout(_session.Device, "k", _fontProperties, float.MaxValue, float.MaxValue))

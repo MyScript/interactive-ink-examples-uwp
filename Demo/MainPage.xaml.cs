@@ -97,6 +97,8 @@ namespace MyScript.IInk.Demo
             if (_dpiX == 0 || _dpiY == 0)
                 _dpiX = _dpiY = 96;
 
+            FontMetricsProvider.Initialize();
+
             var renderer = engine.CreateRenderer(_dpiX, _dpiY, UcEditor);
             renderer.AddListener(new RendererListener(UcEditor));
             var toolController = engine.CreateToolController();
@@ -112,6 +114,18 @@ namespace MyScript.IInk.Demo
             editor.SetViewSize((int)ActualWidth, (int)ActualHeight);
             editor.SetFontMetricsProvider(new FontMetricsProvider(_dpiX, _dpiY));
             editor.AddListener(new EditorListener(UcEditor));
+
+            // see https://developer.myscript.com/docs/interactive-ink/latest/reference/styling for styling reference
+            editor.Theme =
+                "glyph {" +
+                "  font-family: MyScriptInter;" +
+                "}" +
+                ".math {" +
+                "  font-family: STIX;" +
+                "}" +
+                ".math-variable {" +
+                "  font-style: italic;" +
+                "};";
         }
 
         private void ResetSelection()
