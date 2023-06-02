@@ -528,11 +528,13 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             if ( (_activeBlock != null) && !_activeBlock.IsValid())
             {
                 var activeBlockId = _activeBlock.Id;
-                _activeBlock?.Dispose();
-                _activeBlock = Editor.GetBlockById(activeBlockId);
+                var newActiveBlock = Editor.GetBlockById(activeBlockId);
 
-                if (_activeBlock == null)
-                    ResetWidgets();
+                if (newActiveBlock != null)
+                {
+                    _activeBlock?.Dispose();
+                    _activeBlock = newActiveBlock;
+                }
             }
 
             if (_activeBlock != null)
