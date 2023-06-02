@@ -310,7 +310,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 var hasStates  = (supportedStates  != null) && supportedStates.Any();
                 var hasFormats = (supportedFormats != null) && supportedFormats.Any();
 
-                if (hasTypes && isRoot)
+                if (hasTypes && (!onTextDocument || isRoot))
                     actions |= ContextualActions.ADD_BLOCK;
                 if (!isRoot)
                     actions |= ContextualActions.REMOVE;
