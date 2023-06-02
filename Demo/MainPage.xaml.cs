@@ -596,23 +596,72 @@ namespace MyScript.IInk.Demo
 
             if (availableActions.HasFlag(AvailableActions.FORMAT_TEXT))
             {
+                var supportedFormats = Editor.GetSupportedTextFormats(contentBlock);
+
                 var flyoutSubItem = new MenuFlyoutSubItem { Text = "Format..." };
                 flyoutMenu.Items.Add(flyoutSubItem);
 
+                if (supportedFormats.Contains(TextFormat.H1))
                 {
                     var command = new FlyoutCommand("H1", (cmd) => { Popup_CommandHandler_FormatH1(cmd); });
                     var flyoutItem = new MenuFlyoutItem { Text = "H1", Command = command };
                     flyoutSubItem.Items.Add(flyoutItem);
                 }
+                if (supportedFormats.Contains(TextFormat.H2))
                 {
                     var command = new FlyoutCommand("H2", (cmd) => { Popup_CommandHandler_FormatH2(cmd); });
                     var flyoutItem = new MenuFlyoutItem { Text = "H2", Command = command };
                     flyoutSubItem.Items.Add(flyoutItem);
                 }
+                if (supportedFormats.Contains(TextFormat.PARAGRAPH))
                 {
                     var command = new FlyoutCommand("P", (cmd) => { Popup_CommandHandler_FormatP(cmd); });
                     var flyoutItem = new MenuFlyoutItem { Text = "P", Command = command };
                     flyoutSubItem.Items.Add(flyoutItem);
+                }
+                if (supportedFormats.Contains(TextFormat.LIST_BULLET))
+                {
+                    var command = new FlyoutCommand("Bullet list", (cmd) => { Popup_CommandHandler_FormatBulletList(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Bullet list", Command = command };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+                if (supportedFormats.Contains(TextFormat.LIST_CHECKBOX))
+                {
+                    var command = new FlyoutCommand("Checkbox list", (cmd) => { Popup_CommandHandler_FormatCheckboxList(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Checkbox list", Command = command };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+                if (supportedFormats.Contains(TextFormat.LIST_NUMBERED))
+                {
+                    var command = new FlyoutCommand("Numbered list", (cmd) => { Popup_CommandHandler_FormatNumberedList(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Numbered list", Command = command };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+            }
+
+            if (!Editor.IsEmpty(contentBlock))
+            {
+                IndentationLevels indentLevels = Editor.GetIndentationLevels(contentBlock);
+
+                bool indentable = (int)indentLevels.Low < (int)indentLevels.Max - 1;
+                bool deindentable = indentLevels.High > 0;
+
+                if (indentable || deindentable)
+                {
+                    var flyoutSubItem = new MenuFlyoutSubItem { Text = "Indentation..." };
+                    flyoutMenu.Items.Add(flyoutSubItem);
+                    if (indentable)
+                    {
+                        var command = new FlyoutCommand("Increase", (cmd) => { Popup_CommandHandler_IncreaseIndentation(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Increase", Command = command };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
+                    if (deindentable)
+                    {
+                        var command = new FlyoutCommand("Decrease", (cmd) => { Popup_CommandHandler_DecreaseIndentation(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Decrease", Command = command };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
                 }
             }
 
@@ -671,23 +720,72 @@ namespace MyScript.IInk.Demo
 
             if (availableActions.HasFlag(AvailableActions.FORMAT_TEXT))
             {
+                var supportedFormats = Editor.GetSupportedTextFormats(contentSelection);
+
                 var flyoutSubItem = new MenuFlyoutSubItem { Text = "Format..." };
                 flyoutMenu.Items.Add(flyoutSubItem);
 
+                if (supportedFormats.Contains(TextFormat.H1))
                 {
                     var command = new FlyoutCommand("H1", (cmd) => { Popup_CommandHandler_FormatH1(cmd); });
                     var flyoutItem = new MenuFlyoutItem { Text = "H1", Command = command };
                     flyoutSubItem.Items.Add(flyoutItem);
                 }
+                if (supportedFormats.Contains(TextFormat.H2))
                 {
                     var command = new FlyoutCommand("H2", (cmd) => { Popup_CommandHandler_FormatH2(cmd); });
                     var flyoutItem = new MenuFlyoutItem { Text = "H2", Command = command };
                     flyoutSubItem.Items.Add(flyoutItem);
                 }
+                if (supportedFormats.Contains(TextFormat.PARAGRAPH))
                 {
                     var command = new FlyoutCommand("P", (cmd) => { Popup_CommandHandler_FormatP(cmd); });
                     var flyoutItem = new MenuFlyoutItem { Text = "P", Command = command };
                     flyoutSubItem.Items.Add(flyoutItem);
+                }
+                if (supportedFormats.Contains(TextFormat.LIST_BULLET))
+                {
+                    var command = new FlyoutCommand("Bullet list", (cmd) => { Popup_CommandHandler_FormatBulletList(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Bullet list", Command = command };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+                if (supportedFormats.Contains(TextFormat.LIST_CHECKBOX))
+                {
+                    var command = new FlyoutCommand("Checkbox list", (cmd) => { Popup_CommandHandler_FormatCheckboxList(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Checkbox list", Command = command };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+                if (supportedFormats.Contains(TextFormat.LIST_NUMBERED))
+                {
+                    var command = new FlyoutCommand("Numbered list", (cmd) => { Popup_CommandHandler_FormatNumberedList(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Numbered list", Command = command };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+            }
+
+            if (!Editor.IsEmpty(contentSelection))
+            {
+                IndentationLevels indentLevels = Editor.GetIndentationLevels(contentSelection);
+
+                bool indentable = (int)indentLevels.Low < (int)indentLevels.Max - 1;
+                bool deindentable = indentLevels.High > 0;
+
+                if (indentable || deindentable)
+                {
+                    var flyoutSubItem = new MenuFlyoutSubItem { Text = "Indentation..." };
+                    flyoutMenu.Items.Add(flyoutSubItem);
+                    if (indentable)
+                    {
+                        var command = new FlyoutCommand("Increase", (cmd) => { Popup_CommandHandler_IncreaseIndentation(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Increase", Command = command };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
+                    if (deindentable)
+                    {
+                        var command = new FlyoutCommand("Decrease", (cmd) => { Popup_CommandHandler_DecreaseIndentation(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Decrease", Command = command };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
                 }
             }
 
@@ -1119,6 +1217,76 @@ namespace MyScript.IInk.Demo
             {
                 if (_lastContentSelection != null)
                     Editor.SetTextFormat(_lastContentSelection, TextFormat.PARAGRAPH);
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
+        }
+
+        private async void Popup_CommandHandler_FormatBulletList(FlyoutCommand command)
+        {
+            try
+            {
+                if (_lastContentSelection != null)
+                    Editor.SetTextFormat(_lastContentSelection, TextFormat.LIST_BULLET);
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
+        }
+
+        private async void Popup_CommandHandler_FormatCheckboxList(FlyoutCommand command)
+        {
+            try
+            {
+                if (_lastContentSelection != null)
+                    Editor.SetTextFormat(_lastContentSelection, TextFormat.LIST_CHECKBOX);
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
+        }
+
+        private async void Popup_CommandHandler_FormatNumberedList(FlyoutCommand command)
+        {
+            try
+            {
+                if (_lastContentSelection != null)
+                    Editor.SetTextFormat(_lastContentSelection, TextFormat.LIST_NUMBERED);
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
+        }
+
+        private async void Popup_CommandHandler_IncreaseIndentation(FlyoutCommand command)
+        {
+            try
+            {
+                if (_lastContentSelection != null)
+                    Editor.Indent(_lastContentSelection, 1);
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
+        }
+
+        private async void Popup_CommandHandler_DecreaseIndentation(FlyoutCommand command)
+        {
+            try
+            {
+                if (_lastContentSelection != null)
+                    Editor.Indent(_lastContentSelection, -1);
             }
             catch (Exception ex)
             {
