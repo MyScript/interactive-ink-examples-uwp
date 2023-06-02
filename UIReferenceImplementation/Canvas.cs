@@ -124,12 +124,32 @@ namespace MyScript.IInk.UIReferenceImplementation
                     var invTransform = new Transform(_transform);
                     invTransform.Invert();
                     invTransform.Multiply(prevTr);
-                    var topLeft  = invTransform.Apply((float)_activeLayerRect.Left,  (float)_activeLayerRect.Top);
-                    var btmRight = invTransform.Apply((float)_activeLayerRect.Right, (float)_activeLayerRect.Bottom);
+
+                    var corners = new Graphics.Point[4];
+                    corners[0] = invTransform.Apply((float)_activeLayerRect.Left, (float)_activeLayerRect.Top);
+                    corners[1] = invTransform.Apply((float)_activeLayerRect.Right, (float)_activeLayerRect.Top);
+                    corners[2] = invTransform.Apply((float)_activeLayerRect.Right, (float)_activeLayerRect.Bottom);
+                    corners[3] = invTransform.Apply((float)_activeLayerRect.Left, (float)_activeLayerRect.Bottom);
+
+                    Graphics.Point topLeft = new Graphics.Point(corners[0].X, corners[0].Y);
+                    Graphics.Point bottomRight = new Graphics.Point(corners[0].X, corners[0].Y);
+                    for (int i = 1; i < 4; i++)
+                    {
+                        if (corners[i].X < topLeft.X)
+                            topLeft.X = corners[i].X;
+                        if (corners[i].X > bottomRight.X)
+                            bottomRight.X = corners[i].X;
+
+                        if (corners[i].Y < topLeft.Y)
+                            topLeft.Y = corners[i].Y;
+                        if (corners[i].Y > bottomRight.Y)
+                            bottomRight.Y = corners[i].Y;
+                    }
+
                     _activeLayerRect.X = topLeft.X;
                     _activeLayerRect.Y = topLeft.Y;
-                    _activeLayerRect.Width  = btmRight.X - topLeft.X;
-                    _activeLayerRect.Height = btmRight.Y - topLeft.Y;
+                    _activeLayerRect.Width  = bottomRight.X - topLeft.X;
+                    _activeLayerRect.Height = bottomRight.Y - topLeft.Y;
 
                     _activeLayer.Dispose();
                     _activeLayer = _session.CreateLayer(1.0f, _activeLayerRect);
