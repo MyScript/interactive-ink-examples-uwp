@@ -9,7 +9,7 @@ The repository content targets UWP platform.
 ## Getting started
 
 ### Prerequisites
-This getting started section has been tested with Visual Studio 2017 and supports [UWP Build 15063](https://docs.microsoft.com/en-us/windows/uwp/updates-and-versions/choose-a-uwp-version)
+This getting started section has been tested with Visual Studio 2022 and supports [UWP Build 17763](https://docs.microsoft.com/en-us/windows/uwp/updates-and-versions/choose-a-uwp-version)
 
 ### Installation
 
@@ -19,7 +19,7 @@ This getting started section has been tested with Visual Studio 2017 and support
 
 3. Copy this certificate to `GetStarted\MyCertificate.cs` and `Demo\MyCertificate.cs`
 
-4. Open `MyScript.InteractiveInk.Examples.Uwp-VS2017.sln` file. `GetStarted` project is the most simple example and is design to help you understand what Interactive Ink is about and how easy it is to integrate it into your application. `Demo` project contains a complete example and helps you build your own integration. You can select which project to launch by right-clicking the project in the solution browser and selecting "Set as startup project".
+4. Open `MyScript.InteractiveInk.Examples.Uwp.sln` file. `GetStarted` project is the most simple example and is design to help you understand what Interactive Ink is about and how easy it is to integrate it into your application. `Demo` project contains a complete example and helps you build your own integration. You can select which project to launch by right-clicking the project in the solution browser and selecting "Set as startup project".
 
 5. Note that you may encounter compile errors of the form `...\UserControls\EditorUserControl.xaml.cs(85,27,85,40): error CS0103: The name 'captureCanvas' does not exist in the current context`. When this happen you have to edit `UserControls\EditorUserControl.xaml` file from Visual Studio, add a space at the beginning, remove the space, and save the file. Then build again and the errors should be gone.
 
