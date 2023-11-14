@@ -36,6 +36,9 @@ namespace MyScript.IInk.Demo
             EnableRawContentInteractivity(engine);
             ConfigureDiagramInteractivity(engine);
             EnableStrokePrediction(engine, true, 16);
+
+            // Configure multithreading for text recognition
+            SetMaxRecognitionThreadCount(engine, 1);
         }
 
         private static void EnableRawContentInteractivity(Engine engine)
@@ -86,6 +89,10 @@ namespace MyScript.IInk.Demo
         {
             engine.Configuration.SetBoolean("renderer.prediction.enable", enable);
             engine.Configuration.SetNumber("renderer.prediction.duration", durationMs);
+        }
+        private static void SetMaxRecognitionThreadCount(Engine engine, uint threadCount)
+        {
+            engine.Configuration.SetNumber("max-recognition-thread-count", threadCount);
         }
 
         private static async void OnUnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
