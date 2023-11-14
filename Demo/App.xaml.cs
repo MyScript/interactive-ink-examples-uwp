@@ -33,11 +33,12 @@ namespace MyScript.IInk.Demo
             var tempFolder = System.IO.Path.Combine(localFolder, "tmp");
             engine.Configuration.SetString("content-package.temp-folder", tempFolder);
 
-            EnableRawContentConversion(engine);
+            EnableRawContentInteractivity(engine);
+            ConfigureDiagramInteractivity(engine);
             EnableStrokePrediction(engine, true, 16);
         }
 
-        private static void EnableRawContentConversion(Engine engine)
+        private static void EnableRawContentInteractivity(Engine engine)
         {
             // Display grid background
             engine.Configuration.SetString("raw-content.line-pattern", "grid");
@@ -68,6 +69,17 @@ namespace MyScript.IInk.Demo
             // Allow gesture detection
             var gestures = new string[] { "underline", "scratch-out", "strike-through" };
             engine.Configuration.SetStringArray("raw-content.pen.gestures", gestures);
+
+            // Allow shape & image rotation
+            var rotations = new string[] { "shape", "image" };
+            engine.Configuration.SetStringArray("raw-content.rotation", rotations);
+        }
+
+        private static void ConfigureDiagramInteractivity(Engine engine)
+        {
+            // Allow shape rotation
+            var rotations = new string[] { "shape" };
+            engine.Configuration.SetStringArray("diagram.rotation", rotations);
         }
 
         private static void EnableStrokePrediction(Engine engine, bool enable, uint durationMs = 16)
