@@ -34,6 +34,7 @@ namespace MyScript.IInk.Demo
             engine.Configuration.SetString("content-package.temp-folder", tempFolder);
 
             EnableRawContentConversion(engine);
+            EnableStrokePrediction(engine, true, 16);
         }
 
         private static void EnableRawContentConversion(Engine engine)
@@ -67,6 +68,12 @@ namespace MyScript.IInk.Demo
             // Allow gesture detection
             var gestures = new string[] { "underline", "scratch-out", "strike-through" };
             engine.Configuration.SetStringArray("raw-content.pen.gestures", gestures);
+        }
+
+        private static void EnableStrokePrediction(Engine engine, bool enable, uint durationMs = 16)
+        {
+            engine.Configuration.SetBoolean("renderer.prediction.enable", enable);
+            engine.Configuration.SetNumber("renderer.prediction.duration", durationMs);
         }
 
         private static async void OnUnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
