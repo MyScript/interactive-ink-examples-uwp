@@ -1,25 +1,21 @@
 // Copyright @ MyScript. All rights reserved.
 
-using MyScript.IInk.Graphics;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Windows.Foundation;
 using Windows.UI.Core;
-using Windows.ApplicationModel.Core;
 
 namespace MyScript.IInk.UIReferenceImplementation
 {
     public class Layer
     {
-        public LayerType Type { get; private set; }
         public ImageLoader ImageLoader { get; set; }
 
         private CanvasVirtualControl _control;
         private IRenderTarget _target;
         private Renderer _renderer ;
 
-        public Layer(CanvasVirtualControl control, IRenderTarget target, LayerType type, Renderer renderer)
+        public Layer(CanvasVirtualControl control, IRenderTarget target, Renderer renderer)
         {
-            Type = type;
             _control = control;
             _target = target;
             _renderer = renderer;
@@ -70,23 +66,11 @@ namespace MyScript.IInk.UIReferenceImplementation
             {
                 var canvas = new Canvas(session, _target, ImageLoader);
 
-                switch (Type)
-                {
-                    case LayerType.MODEL:
-                        canvas.Begin();
-                        _renderer.DrawModel(x, y, width, height, canvas);
-                        canvas.End();
-                        break;
+                canvas.ClearOnStartDraw = true;
+                _renderer.DrawModel(x, y, width, height, canvas);
 
-                    case LayerType.CAPTURE:
-                        canvas.Begin();
-                        _renderer.DrawCaptureStrokes(x, y, width, height, canvas);
-                        canvas.End();
-                        break;
-
-                    default:
-                        break;
-                }
+                canvas.ClearOnStartDraw = false;
+                _renderer.DrawCaptureStrokes(x, y, width, height, canvas);
             }
         }
 

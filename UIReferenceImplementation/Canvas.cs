@@ -41,6 +41,8 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         #endregion
 
+        public bool ClearOnStartDraw { get; set; } = true;
+
         public Canvas(CanvasDrawingSession session, IRenderTarget target, ImageLoader imageLoader)
         {
             _session = session;
@@ -99,7 +101,6 @@ namespace MyScript.IInk.UIReferenceImplementation
 
         public void End()
         {
-            _session.Flush();
         }
 
         public void Clear(Color color)
@@ -437,14 +438,17 @@ namespace MyScript.IInk.UIReferenceImplementation
         {
             Begin();
 
-            EditorUserControl editor = _target as EditorUserControl;
-            if (editor?.SupportsOffscreenRendering() ?? false)
+            if (ClearOnStartDraw)
             {
-                var drawingLayerRect = new Rect(x, y, width, height);
-                using (var drawingLayer = _session.CreateLayer(1.0f, drawingLayerRect))
+                EditorUserControl editor = _target as EditorUserControl;
+                if (editor?.SupportsOffscreenRendering() ?? false)
                 {
-                    var color = Windows.UI.Color.FromArgb((byte)0, (byte)0, (byte)0, (byte)0);
-                    _session.Clear(color);
+                    var drawingLayerRect = new Rect(x, y, width, height);
+                    using (var drawingLayer = _session.CreateLayer(1.0f, drawingLayerRect))
+                    {
+                        var color = Windows.UI.Color.FromArgb((byte)0, (byte)0, (byte)0, (byte)0);
+                        _session.Clear(color);
+                    }
                 }
             }
         }

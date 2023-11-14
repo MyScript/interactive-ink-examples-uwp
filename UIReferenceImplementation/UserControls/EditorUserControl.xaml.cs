@@ -43,8 +43,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         public ImageLoader ImageLoader => _loader;
         public SmartGuideUserControl SmartGuide => smartGuide;
 
-        private Layer _modelLayer;
-        private Layer _captureLayer;
+        private Layer _renderLayer;
 
         private uint _nextOffscreenRenderId = 0;
         private IDictionary<uint, CanvasRenderTarget> _bitmaps = new Dictionary<uint, CanvasRenderTarget>();
@@ -84,14 +83,12 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             var dpiY = Editor?.Renderer?.DpiY ?? 96;
 
             var render = editor.Renderer;
-            _modelLayer = new Layer(modelCanvas, this, LayerType.MODEL, render);
-            _captureLayer = new Layer(captureCanvas, this, LayerType.CAPTURE, render);
+            _renderLayer = new Layer(renderCanvas, this, render);
 
             var tempFolder = engine.Configuration.GetString("content-package.temp-folder");
             _loader = new ImageLoader(Editor, tempFolder);
 
-            _modelLayer.ImageLoader = _loader;
-            _captureLayer.ImageLoader = _loader;
+            _renderLayer.ImageLoader = _loader;
 
             float verticalMarginPX = 60;
             float horizontalMarginPX = 40;
@@ -106,34 +103,24 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
             engine.Configuration.SetNumber("math.margin.right", horizontalMarginMM);
         }
 
-        /// <summary>Force inks layer to be redrawn</summary>
+        /// <summary>Force ink layer to be redrawn</summary>
         public void Invalidate(LayerType layers)
         {
             if (!(Editor?.Renderer is Renderer renderer)) return;
             Invalidate(renderer, layers);
         }
 
-        /// <summary>Force inks layer to be redrawn</summary>
+        /// <summary>Force ink layer to be redrawn</summary>
         public void Invalidate(Renderer renderer, LayerType layers)
         {
-            if ((layers & LayerType.MODEL) != 0)
-                _modelLayer.Update();
-
-            if ((layers & LayerType.CAPTURE) != 0)
-                _captureLayer.Update();
+            _renderLayer.Update();
         }
 
-        /// <summary>Force ink layers to be redrawn according region</summary>
+        /// <summary>Force ink layer to be redrawn according region</summary>
         public void Invalidate(Renderer renderer, int x, int y, int width, int height, LayerType layers)
         {
-            if (height < 0)
-                return;
-
-            if ((layers & LayerType.MODEL) != 0)
-                _modelLayer?.Update(x, y, width, height);
-
-            if ((layers & LayerType.CAPTURE) != 0)
-                _captureLayer?.Update(x, y, width, height);
+            if (width > 0 && height > 0)
+                _renderLayer?.Update(x, y, width, height);
         }
 
         public bool SupportsOffscreenRendering()
@@ -216,9 +203,9 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
         /// <summary>Resize editor when one canvas size has been changed </summary>
         private void Canvas_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (sender == captureCanvas)
+            if (sender == renderCanvas)
             {
-                OnResize((int)captureCanvas.ActualWidth, (int)captureCanvas.ActualHeight);
+                OnResize((int)renderCanvas.ActualWidth, (int)renderCanvas.ActualHeight);
             }
 
             ((CanvasVirtualControl)(sender)).Invalidate();
@@ -236,10 +223,8 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                     var width = (int)System.Math.Ceiling(region.X + region.Width) - x;
                     var height = (int)System.Math.Ceiling(region.Y + region.Height) - y;
 
-                    if (sender == captureCanvas)
-                        _captureLayer.OnPaint(x, y, width, height);
-                    else if (sender == modelCanvas)
-                        _modelLayer.OnPaint(x, y, width, height);
+                    if (sender == renderCanvas)
+                        _renderLayer.OnPaint(x, y, width, height);
                 }
             }
         }
@@ -589,7 +574,7 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
 
         private void Capture_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
-            var uiElement = captureCanvas; //sender as UIElement;
+            var uiElement = renderCanvas; //sender as UIElement;
             var properties = e.GetCurrentPoint(uiElement).Properties;
 
             if (!HasPart())

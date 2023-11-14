@@ -8,11 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <Grid>
-        <Win2Dcanvas:CanvasVirtualControl x:Name="modelCanvas"
-                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                          RegionsInvalidated="Canvas_OnRegionsInvalidated"
-                                          SizeChanged="Canvas_SizeChanged"/>
-        <Win2Dcanvas:CanvasVirtualControl x:Name="captureCanvas"
+        <Win2Dcanvas:CanvasVirtualControl x:Name="renderCanvas"
                                           HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                                           RegionsInvalidated="Canvas_OnRegionsInvalidated"
                                           SizeChanged="Canvas_SizeChanged"
