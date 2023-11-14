@@ -9,12 +9,14 @@ namespace MyScript.IInk.UIReferenceImplementation
     public class Path : IPath
     {
         private CanvasPathBuilder _pathBuilder;
+        private CanvasGeometry _cachedPath; // still valid after _pathBuilder is disposed
         private bool _isInFigure;
         private bool _isConfigured;
 
         public Path(CanvasDevice device)
         {
             _pathBuilder = new CanvasPathBuilder(device);
+            _cachedPath = null;
             _isInFigure = false;
             _isConfigured = false;
         }
@@ -41,11 +43,13 @@ namespace MyScript.IInk.UIReferenceImplementation
 
             _pathBuilder.BeginFigure(x, y);
             _isInFigure = true;
+            _cachedPath = null;
         }
 
         public void LineTo(float x, float y)
         {
             _pathBuilder.AddLine(x, y);
+            _cachedPath = null;
         }
 
         public void CurveTo(float x1, float y1, float x2, float y2, float x, float y)
@@ -55,6 +59,7 @@ namespace MyScript.IInk.UIReferenceImplementation
             var endPoint = new System.Numerics.Vector2(x, y);
 
             _pathBuilder.AddCubicBezier(controlPoint1, controlPoint2, endPoint);
+            _cachedPath = null;
         }
 
         public void QuadTo(float x1, float y1, float x, float y)
@@ -63,6 +68,7 @@ namespace MyScript.IInk.UIReferenceImplementation
             var endPoint = new System.Numerics.Vector2(x, y);
 
             _pathBuilder.AddQuadraticBezier(controlPoint, endPoint);
+            _cachedPath = null;
         }
 
         public void ArcTo(float rx, float ry, float phi, bool fA, bool fS, float x, float y)
@@ -74,6 +80,7 @@ namespace MyScript.IInk.UIReferenceImplementation
         {
             _pathBuilder.EndFigure(CanvasFigureLoop.Closed);
             _isInFigure = false;
+            _cachedPath = null;
         }
 
         public CanvasGeometry CreateGeometry()
@@ -83,7 +90,12 @@ namespace MyScript.IInk.UIReferenceImplementation
                 _pathBuilder.EndFigure(CanvasFigureLoop.Open);
                 _isInFigure = false;
             }
-            return CanvasGeometry.CreatePath(_pathBuilder);
+            else if (_cachedPath != null)
+            {
+                return _cachedPath;
+            }
+            _cachedPath = CanvasGeometry.CreatePath(_pathBuilder);
+            return _cachedPath;
         }
     };
 }
