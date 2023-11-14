@@ -26,6 +26,7 @@
 
             <CommandBar.SecondaryCommands>
                 <AppBarButton Label="Reset view" Click="AppBar_ResetViewButton_Click" />
+                <AppBarButton Label="Clear" Click="AppBar_ClearButton_Click" />
                 <AppBarButton Label="Convert" Click="AppBar_ConvertButton_Click" />
                 <AppBarSeparator />
                 <AppBarButton Icon="NewFolder" Label="New" Click="AppBar_NewPackageButton_Click" />

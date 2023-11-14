@@ -185,6 +185,11 @@ namespace MyScript.IInk.Demo
             Editor.Redo();
         }
 
+        private async void AppBar_ClearButton_Click(object sender, RoutedEventArgs e)
+        {
+            Editor.Clear();
+        }
+
         private async void AppBar_ConvertButton_Click(object sender, RoutedEventArgs e)
         {
             try
