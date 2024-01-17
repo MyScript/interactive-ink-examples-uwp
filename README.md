@@ -21,8 +21,6 @@ This getting started section has been tested with Visual Studio 2022 and support
 
 4. Open `MyScript.InteractiveInk.Examples.Uwp.sln` file. `GetStarted` project is the most simple example and is design to help you understand what Interactive Ink is about and how easy it is to integrate it into your application. `Demo` project contains a complete example and helps you build your own integration. You can select which project to launch by right-clicking the project in the solution browser and selecting "Set as startup project".
 
-5. Note that you may encounter compile errors of the form `...\UserControls\EditorUserControl.xaml.cs(85,27,85,40): error CS0103: The name 'captureCanvas' does not exist in the current context`. When this happen you have to edit `UserControls\EditorUserControl.xaml` file from Visual Studio, add a space at the beginning, remove the space, and save the file. Then build again and the errors should be gone.
-
 ## Building your own integration
 
 In your application add the dependency to `MyScript.InteractiveInk.Uwp` nuget. Also copy `UIReferenceImplementation` directory into your project. More details available in the [developer guide](https://developer.myscript.com/docs/interactive-ink/latest/windows/).
