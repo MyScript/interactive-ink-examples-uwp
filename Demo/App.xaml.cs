@@ -64,6 +64,8 @@ namespace MyScript.IInk.Demo
             engine.Configuration.SetBoolean("raw-content.eraser.erase-precisely", false);
             engine.Configuration.SetBoolean("raw-content.eraser.dynamic-radius", true);
             engine.Configuration.SetBoolean("raw-content.auto-connection", true);
+            var policies = new string[] { "default-with-drag" };
+            engine.Configuration.SetStringArray("raw-content.edge.policy", policies);
 
             // Show alignment guides and snap to them
             engine.Configuration.SetBoolean("raw-content.guides.enable", true);
