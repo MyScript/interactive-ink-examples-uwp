@@ -27,7 +27,7 @@
       <Version>6.2.13</Version>
     </PackageReference>
     <PackageReference Include="MyScript.InteractiveInk.Uwp">
-      <Version>3.0.4</Version>
+      <Version>3.0.5</Version>
     </PackageReference>
     <PackageReference Include="System.Json">
       <Version>4.7.1</Version>
