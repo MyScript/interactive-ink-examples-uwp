@@ -47,13 +47,8 @@ namespace MyScript.IInk.Demo
             engine.Configuration.SetString("raw-content.line-pattern", "grid");
 
             // Activate handwriting recognition for text only
-            engine.Configuration.SetBoolean("raw-content.recognition.text", true);
-            engine.Configuration.SetBoolean("raw-content.recognition.shape", false);
-
-            // Allow conversion of text
-            engine.Configuration.SetBoolean("raw-content.convert.text", true);
-            engine.Configuration.SetBoolean("raw-content.convert.node", false);
-            engine.Configuration.SetBoolean("raw-content.convert.edge", false);
+            var recognitionType = new string[] { "text" };
+            engine.Configuration.SetStringArray("raw-content.recognition.types", recognitionType);
 
             // Allow converting shapes by holding the pen in position
             engine.Configuration.SetBoolean("raw-content.convert.shape-on-hold", true);
@@ -63,8 +58,8 @@ namespace MyScript.IInk.Demo
             engine.Configuration.SetStringArray("raw-content.shape.snap-axis", shapeSnapAxis);
 
             // Configure interactions
-            engine.Configuration.SetString("raw-content.interactive-items", "converted-or-mixed");
-            engine.Configuration.SetBoolean("raw-content.tap-interactions", true);
+            var autoClassifiedInteractivity = Array.Empty<string>();
+            engine.Configuration.SetStringArray("raw-content.interactive-blocks.auto-classified", autoClassifiedInteractivity);
             engine.Configuration.SetBoolean("raw-content.eraser.erase-precisely", false);
             engine.Configuration.SetBoolean("raw-content.eraser.dynamic-radius", true);
             engine.Configuration.SetBoolean("raw-content.auto-connection", true);
@@ -72,8 +67,9 @@ namespace MyScript.IInk.Demo
             engine.Configuration.SetStringArray("raw-content.edge.policy", policies);
 
             // Show alignment guides and snap to them
-            engine.Configuration.SetBoolean("raw-content.guides.enable", true);
-            engine.Configuration.SetBoolean("raw-content.guides.snap", true);
+            var guides = new string[] { "alignment", "text", "square", "square-inside", "image-aspect-ratio", "rotation" };
+            engine.Configuration.SetStringArray("raw-content.guides.show", guides);
+            engine.Configuration.SetStringArray("raw-content.guides.snap", guides);
 
             // Allow gesture detection
             var gestures = new string[] { "underline", "scratch-out", "strike-through" };
