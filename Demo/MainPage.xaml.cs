@@ -281,7 +281,7 @@ namespace MyScript.IInk.Demo
                         }
                         catch
                         {
-                            // Can't set this part, try the previous one
+                            // Cannot set this part, try the previous one
                             Editor.Part = null;
                             Title.Text = "";
                             newPart?.Dispose();
@@ -331,7 +331,7 @@ namespace MyScript.IInk.Demo
                         }
                         catch
                         {
-                            // Can't set this part, try the next one
+                            // Cannot set this part, try the next one
                             Editor.Part = null;
                             Title.Text = "";
                             newPart?.Dispose();
