@@ -8,12 +8,9 @@ The repository content targets UWP platform.
 
 ## Getting started
 
-### Prerequisites
-This getting started section has been tested with Visual Studio 2022 and supports [UWP Build 17763](https://docs.microsoft.com/en-us/windows/uwp/updates-and-versions/choose-a-uwp-version)
-
 ### Installation
 
-1. Clone the examples repository  `git clone https://github.com/MyScript/interactive-ink-examples-uwp.git`
+1. Clone the examples repository `git clone https://github.com/MyScript/interactive-ink-examples-uwp.git`
 
 2. Claim a certificate to receive the free license to start develop your application by following the first steps of [Getting Started](https://developer.myscript.com/getting-started)
 
