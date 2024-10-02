@@ -58,6 +58,9 @@ namespace MyScript.IInk.Demo
 
     public sealed partial class MainPage
     {
+        private const string _configurationDirectory = "configurations";
+        private const string _defaultConfiguration   = "interactivity.json";
+
         private Graphics.Point _lastPointerPosition;
         private IContentSelection _lastContentSelection;
 
@@ -211,6 +214,93 @@ namespace MyScript.IInk.Demo
             NewFile();
         }
 
+        Tuple<string, string> SplitPartTypeAndProfile(string partTypeWithProfile)
+        {
+            var profileStart = partTypeWithProfile.LastIndexOf("(");
+            string partType;
+            string profile;
+
+            if (profileStart < 0)
+            {
+                partType = partTypeWithProfile;
+                profile = string.Empty;
+            }
+            else
+            {
+                partType = partTypeWithProfile.Substring(0, profileStart);
+                profile = partTypeWithProfile.Substring(profileStart + 1, partTypeWithProfile.Length - profileStart - 2);
+            }
+
+            return new Tuple<string, string>(partType.Trim(), profile.Trim());
+        }
+
+        private async void AddNewPart(string newPartType, bool newPackage)
+        {
+            (var partType, var profile) = SplitPartTypeAndProfile(newPartType);
+
+            if (String.IsNullOrEmpty(partType))
+                return;
+
+            ResetSelection();
+
+            if (!newPackage && (Editor.Part != null))
+            {
+                var previousPart = Editor.Part;
+                var package = previousPart.Package;
+
+                try
+                {
+                    SetPart(null);
+
+                    var part = package.CreatePart(partType);
+
+                    SetConfigurationProfile(part, profile);
+                    SetPart(part);
+                    Title.Text = _packageName + " - " + part.Type;
+
+                    previousPart.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    SetPart(previousPart);
+                    Title.Text = _packageName + " - " + Editor.Part.Type;
+
+                    var msgDialog = new MessageDialog(ex.ToString());
+                    await msgDialog.ShowAsync();
+                }
+            }
+            else
+            {
+                try
+                {
+                    // Save and close current package
+                    SavePackage();
+                    ClosePackage();
+
+                    // Create package and part
+                    var packageName = MakeUntitledFilename();
+                    var package = Editor.Engine.CreatePackage(packageName);
+                    var part = package.CreatePart(partType);
+
+                    SetConfigurationProfile(part, profile);
+                    SetPart(part);
+
+                    _packageName = System.IO.Path.GetFileName(packageName);
+                    Title.Text = _packageName + " - " + part.Type;
+                }
+                catch (Exception ex)
+                {
+                    ClosePackage();
+
+                    var msgDialog = new MessageDialog(ex.ToString());
+                    await msgDialog.ShowAsync();
+                }
+            }
+
+            // Reset viewing parameters
+            UcEditor.ResetView(false);
+        }
+
         private async void AppBar_NewPartButton_Click(object sender, RoutedEventArgs e)
         {
             if (Editor.Part == null)
@@ -219,37 +309,15 @@ namespace MyScript.IInk.Demo
                 return;
             }
 
-            var partType = await ChoosePartType(true);
+            var supportedPartTypes = GetSupportedPartTypesAndProfile();
+            if (supportedPartTypes.Length <= 0)
+                return;
 
-            if (!string.IsNullOrEmpty(partType))
-            {
-                ResetSelection();
+            var partType = await ChoosePartType(supportedPartTypes, true);
+            if (String.IsNullOrEmpty(partType))
+                return;
 
-                var previousPart = Editor.Part;
-                var package = previousPart.Package;
-
-                try
-                {
-                    Editor.Part = null;
-
-                    var part = package.CreatePart(partType);
-                    Editor.Part = part;
-                    Title.Text = _packageName + " - " + part.Type;
-
-                    previousPart.Dispose();
-                }
-                catch (Exception ex)
-                {
-                    Editor.Part = previousPart;
-                    Title.Text = _packageName + " - " + Editor.Part.Type;
-
-                    var msgDialog = new MessageDialog(ex.ToString());
-                    await msgDialog.ShowAsync();
-                }
-
-                // Reset viewing parameters
-                UcEditor.ResetView(false);
-            }
+            AddNewPart(partType, false);
         }
 
         private void AppBar_PreviousPartButton_Click(object sender, RoutedEventArgs e)
@@ -264,7 +332,7 @@ namespace MyScript.IInk.Demo
                 if (index > 0)
                 {
                     ResetSelection();
-                    Editor.Part = null;
+                    SetPart(null);
 
                     while (--index >= 0)
                     {
@@ -274,7 +342,7 @@ namespace MyScript.IInk.Demo
                         {
                             // Select new part
                             newPart = part.Package.GetPart(index);
-                            Editor.Part = newPart;
+                            SetPart(newPart);
                             Title.Text = _packageName + " - " + newPart.Type;
                             part.Dispose();
                             break;
@@ -282,7 +350,7 @@ namespace MyScript.IInk.Demo
                         catch
                         {
                             // Cannot set this part, try the previous one
-                            Editor.Part = null;
+                            SetPart(null);
                             Title.Text = "";
                             newPart?.Dispose();
                         }
@@ -291,7 +359,7 @@ namespace MyScript.IInk.Demo
                     if (index < 0)
                     {
                         // Restore current part if none can be set
-                        Editor.Part = part;
+                        SetPart(part);
                         Title.Text = _packageName + " - " + part.Type;
                     }
 
@@ -314,7 +382,7 @@ namespace MyScript.IInk.Demo
                 if (index < count - 1)
                 {
                     ResetSelection();
-                    Editor.Part = null;
+                    SetPart(null);
 
                     while (++index < count)
                     {
@@ -324,7 +392,7 @@ namespace MyScript.IInk.Demo
                         {
                             // Select new part
                             newPart = part.Package.GetPart(index);
-                            Editor.Part = newPart;
+                            SetPart(newPart);
                             Title.Text = _packageName + " - " + newPart.Type;
                             part.Dispose();
                             break;
@@ -332,7 +400,7 @@ namespace MyScript.IInk.Demo
                         catch
                         {
                             // Cannot set this part, try the next one
-                            Editor.Part = null;
+                            SetPart(null);
                             Title.Text = "";
                             newPart?.Dispose();
                         }
@@ -341,7 +409,7 @@ namespace MyScript.IInk.Demo
                     if (index >= count)
                     {
                         // Restore current part if none can be set
-                        Editor.Part = part;
+                        SetPart(part);
                         Title.Text = _packageName + " - " + part.Type;
                     }
 
@@ -412,7 +480,7 @@ namespace MyScript.IInk.Demo
                 // Open package and select first part
                 var package = Editor.Engine.OpenPackage(filePath);
                 var part = package.GetPart(0);
-                Editor.Part = part;
+                SetPart(part);
                 _packageName = fileName;
                 Title.Text = _packageName + " - " + part.Type;
             }
@@ -1102,7 +1170,7 @@ namespace MyScript.IInk.Demo
                 // Show export dialog
                 var fileName = await ChooseExportFilename(mimeTypes);
 
-                if (!string.IsNullOrEmpty(fileName))
+                if (!String.IsNullOrEmpty(fileName))
                 {
                     var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
                     var item = await localFolder.TryGetItemAsync(fileName);
@@ -1311,42 +1379,94 @@ namespace MyScript.IInk.Demo
         {
             var part = Editor.Part;
             var package = part?.Package;
-            Editor.Part = null;
+            SetPart(null);
             part?.Dispose();
             package?.Dispose();
             Title.Text = "";
         }
 
-        private async void NewFile()
+        private void SetConfigurationProfile(ContentPart part, string profile)
         {
-            var cancelable = Editor.Part != null;
-            var partType = await ChoosePartType(cancelable);
-            if (string.IsNullOrEmpty(partType))
-                return;
+            var metadata = part.Metadata;
+            metadata.SetString("configuration-profile", profile);
+            part.Metadata = metadata;
+        }
 
-            ResetSelection();
-
+        private string ReadConfigurationFile(string profile)
+        {
             try
             {
-                // Save and close current package
-                SavePackage();
-                ClosePackage();
-
-                // Create package and part
-                var packageName = MakeUntitledFilename();
-                var package = Editor.Engine.CreatePackage(packageName);
-                var part = package.CreatePart(partType);
-                Editor.Part = part;
-                _packageName = System.IO.Path.GetFileName(packageName);
-                Title.Text = _packageName + " - " + part.Type;
+                using (var reader = new StreamReader(System.IO.Path.Combine(_configurationDirectory, profile)))
+                {
+                    return reader.ReadToEnd();
+                }
             }
-            catch (Exception ex)
+            catch
             {
-                ClosePackage();
-
-                var msgDialog = new MessageDialog(ex.ToString());
-                await msgDialog.ShowAsync();
+                return String.Empty;
             }
+        }
+
+        private void SetPart(ContentPart part)
+        {
+            Editor.Configuration.Reset();
+
+            if (part != null)
+            {
+                // retrieve the configuration profile from the part metadata
+                var metadata = part.Metadata;
+                string configurationFile = _defaultConfiguration;
+                var profile = metadata.GetString("configuration-profile", "");
+
+                if (!String.IsNullOrEmpty(profile))
+                    configurationFile = part.Type + "/" + profile + ".json";
+
+                // update Editor configuration accordingly
+                var configuration = ReadConfigurationFile(configurationFile);
+                if (!String.IsNullOrEmpty(configuration))
+                    Editor.Configuration.Inject(configuration);
+            }
+
+            Editor.Part = part;
+        }
+
+        string[] GetSupportedPartTypesAndProfile()
+        {
+            List<string> choices = new List<string>();
+
+            foreach (var partType in Editor.Engine.SupportedPartTypes)
+            {
+                // Part with default configuration
+                choices.Add(partType);
+
+                // Check the configurations listed in "configurations/" directory for this part type
+                var directoryPath = System.IO.Path.Combine(_configurationDirectory, partType);
+                if (Directory.Exists(directoryPath))
+                {
+                    var fileList = Directory.GetFiles(directoryPath, "*.json", SearchOption.TopDirectoryOnly);
+                    foreach (var file in fileList)
+                    {
+                        var filename = System.IO.Path.GetFileNameWithoutExtension(file);
+                        choices.Add(partType + " (" + filename + ")");
+                    }
+                }
+            }
+
+            return choices.ToArray();
+        }
+
+        private async void NewFile()
+        {
+            var supportedPartTypes = GetSupportedPartTypesAndProfile();
+            if (supportedPartTypes.Length <= 0)
+                return;
+
+            var cancelable = Editor.Part != null;
+            var partType = await ChoosePartType(supportedPartTypes, cancelable);
+            if (String.IsNullOrEmpty(partType))
+                return;
+
+            AddNewPart(partType, true);
         }
 
         private string MakeUntitledFilename()
@@ -1369,9 +1489,9 @@ namespace MyScript.IInk.Demo
         }
 
 
-        private async System.Threading.Tasks.Task<string> ChoosePartType(bool cancelable)
+        private async System.Threading.Tasks.Task<string> ChoosePartType(string[] supportedPartTypes, bool cancelable)
         {
-            var types = Editor.Engine.SupportedPartTypes.ToList();
+            var types = supportedPartTypes.ToList();
 
             if (types.Count == 0)
                 return null;
