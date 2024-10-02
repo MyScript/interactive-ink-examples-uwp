@@ -531,7 +531,7 @@ namespace MyScript.IInk.Demo
                 var flyoutSubItem = new MenuFlyoutSubItem { Text = "Add..." };
                 for (var i = 0; i < supportedTypes.Count(); ++i)
                 {
-                    if (supportedTypes[i] != "Image") // Not supported in this demo
+                    if (supportedTypes[i] != "Image" && supportedTypes[i] != "Placeholder") // Not supported in this demo
                     {
                         var command = new FlyoutCommand(supportedTypes[i], (cmd) => { Popup_CommandHandler_AddBlock(cmd); });
                         var flyoutItem = new MenuFlyoutItem { Text = "Add " + supportedTypes[i], Command = command };
