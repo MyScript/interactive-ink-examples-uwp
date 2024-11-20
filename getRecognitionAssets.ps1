@@ -27,6 +27,19 @@ if (-not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\diagram.
     $destination.Copyhere($zip_file.items(),16)
     Remove-Item $file
 
+    # Download myscript-iink-recognition-math2.zip
+
+    $clnt = new-object System.Net.WebClient
+    $url = "https://download.myscript.com/iink/recognitionAssets_iink_3.2/myscript-iink-recognition-math2.zip"
+    $file = "$PSScriptRoot\myscript-iink-recognition-math2.zip"
+    $clnt.DownloadFile($url,$file)
+
+    # Unzip myscript-iink-recognition-math2.zip
+
+    $zip_file = $shell_app.namespace($file)
+    $destination.Copyhere($zip_file.items(),16)
+    Remove-Item $file
+
     # Download myscript-iink-recognition-diagram.zip
 
     $clnt = new-object System.Net.WebClient
@@ -48,6 +61,19 @@ if (-not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\diagram.
     $clnt.DownloadFile($url,$file)
 
     # Unzip myscript-iink-recognition-raw-content.zip
+
+    $zip_file = $shell_app.namespace($file)
+    $destination.Copyhere($zip_file.items(),16)
+    Remove-Item $file
+
+    # Download myscript-iink-recognition-raw-content2.zip
+
+    $clnt = new-object System.Net.WebClient
+    $url = "https://download.myscript.com/iink/recognitionAssets_iink_3.2/myscript-iink-recognition-raw-content2.zip"
+    $file = "$PSScriptRoot\myscript-iink-recognition-raw-content2.zip"
+    $clnt.DownloadFile($url,$file)
+
+    # Unzip myscript-iink-recognition-raw-content2.zip
 
     $zip_file = $shell_app.namespace($file)
     $destination.Copyhere($zip_file.items(),16)
