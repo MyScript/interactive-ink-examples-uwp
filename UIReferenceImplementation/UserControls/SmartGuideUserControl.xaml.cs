@@ -120,12 +120,15 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                 removeHighlightDelay = (int)configuration.GetNumber("smart-guide.highlight-removal-delay", SMART_GUIDE_HIGHLIGHT_REMOVAL_DELAY_DEFAULT);
 
                 _exportParams = editor.Engine.CreateParameterSet();
-                _exportParams?.SetBoolean("export.jiix.text.words", true);
-                _exportParams?.SetBoolean("export.jiix.strokes", false);
                 _exportParams?.SetBoolean("export.jiix.bounding-box", false);
                 _exportParams?.SetBoolean("export.jiix.glyphs", false);
                 _exportParams?.SetBoolean("export.jiix.primitives", false);
-                _exportParams?.SetBoolean("export.jiix.chars", false);
+                _exportParams?.SetBoolean("export.jiix.strokes", false);
+                _exportParams?.SetBoolean("export.jiix.text.chars", false);
+                _exportParams?.SetBoolean("export.jiix.text.lines", false);
+                _exportParams?.SetBoolean("export.jiix.text.spans", false);
+                _exportParams?.SetBoolean("export.jiix.text.structure", false);
+                _exportParams?.SetBoolean("export.jiix.text.words", true);
 
                 _importParams = editor.Engine.CreateParameterSet();
                 _importParams?.SetString("diagram.import.jiix.action", "update");
