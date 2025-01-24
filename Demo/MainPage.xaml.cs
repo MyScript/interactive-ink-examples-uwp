@@ -592,17 +592,17 @@ namespace MyScript.IInk.Demo
             var flyoutMenu = new MenuFlyout();
 
             var availableActions = UcEditor.GetAvailableActions(contentBlock);
-            var supportedTypes = Editor.SupportedAddBlockTypes;
 
             if (availableActions.HasFlag(AvailableActions.ADD_BLOCK))
             {
+                var supportedBlocks = Editor.SupportedAddBlockTypes;
                 var flyoutSubItem = new MenuFlyoutSubItem { Text = "Add..." };
-                for (var i = 0; i < supportedTypes.Count(); ++i)
+                for (var i = 0; i < supportedBlocks.Count(); ++i)
                 {
-                    if (supportedTypes[i] != "Image" && supportedTypes[i] != "Placeholder") // Not supported in this demo
+                    if (supportedBlocks[i] != "Image" && supportedBlocks[i] != "Placeholder") // Not supported in this demo
                     {
-                        var command = new FlyoutCommand(supportedTypes[i], (cmd) => { Popup_CommandHandler_AddBlock(cmd); });
-                        var flyoutItem = new MenuFlyoutItem { Text = "Add " + supportedTypes[i], Command = command };
+                        var command = new FlyoutCommand(supportedBlocks[i], (cmd) => { Popup_CommandHandler_AddBlock(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Add " + supportedBlocks[i], Command = command };
                         flyoutSubItem.Items.Add(flyoutItem);
                     }
                 }
@@ -738,6 +738,68 @@ namespace MyScript.IInk.Demo
                 }
             }
 
+            if (availableActions.HasFlag(AvailableActions.SELECTION_MODE))
+            {
+                var supportedModes = Editor.GetAvailableSelectionModes();
+
+                var flyoutSubItem = new MenuFlyoutSubItem { Text = "Selection mode..." };
+                flyoutMenu.Items.Add(flyoutSubItem);
+
+                if (supportedModes.Contains(ContentSelectionMode.LASSO))
+                {
+                    var command = new FlyoutCommand("Lasso", (cmd) => { Popup_CommandHandler_SelectModeLasso(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Lasso", Command = command };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+                if (supportedModes.Contains(ContentSelectionMode.ITEM))
+                {
+                    var command = new FlyoutCommand("Item", (cmd) => { Popup_CommandHandler_SelectModeItem(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Item", Command = command };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+                if (supportedModes.Contains(ContentSelectionMode.RESIZE))
+                {
+                    var command = new FlyoutCommand("Resize", (cmd) => { Popup_CommandHandler_SelectModeResize(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Resize", Command = command };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+            }
+
+            if (availableActions.HasFlag(AvailableActions.SELECTION_TYPE))
+            {
+                var supportedTypes = Editor.GetAvailableSelectionTypes(contentBlock);
+
+                var flyoutSubItem = new MenuFlyoutSubItem { Text = "Selection mode..." };
+                flyoutMenu.Items.Add(flyoutSubItem);
+
+                if (supportedTypes.Contains("Text"))
+                {
+                    {
+                        var command = new FlyoutCommand("Text", (cmd) => { Popup_CommandHandler_SelectTypeText(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Text", Command = command };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
+                    {
+                        var command = new FlyoutCommand("Text - Single Block", (cmd) => { Popup_CommandHandler_SelectTypeTextSingleBlock(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Text - Single Block", Command = command };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
+                }
+                if (supportedTypes.Contains("Math"))
+                {
+                    {
+                        var command = new FlyoutCommand("Math", (cmd) => { Popup_CommandHandler_SelectTypeMath(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Math", Command = command };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
+                    {
+                        var command = new FlyoutCommand("Math - Single Block", (cmd) => { Popup_CommandHandler_SelectTypeMathSingleBlock(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Math - Single Block", Command = command };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
+                }
+            }
+
             if (flyoutMenu.Items.Count > 0)
             {
                 flyoutMenu.ShowAt(null, globalPos);
@@ -857,6 +919,68 @@ namespace MyScript.IInk.Demo
                     {
                         var command = new FlyoutCommand("Decrease", (cmd) => { Popup_CommandHandler_DecreaseIndentation(cmd); });
                         var flyoutItem = new MenuFlyoutItem { Text = "Decrease", Command = command };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
+                }
+            }
+
+            if (availableActions.HasFlag(AvailableActions.SELECTION_MODE))
+            {
+                var supportedModes = Editor.GetAvailableSelectionModes();
+
+                var flyoutSubItem = new MenuFlyoutSubItem { Text = "Selection mode..." };
+                flyoutMenu.Items.Add(flyoutSubItem);
+
+                if (supportedModes.Contains(ContentSelectionMode.LASSO))
+                {
+                    var command = new FlyoutCommand("Lasso", (cmd) => { Popup_CommandHandler_SelectModeLasso(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Lasso", Command = command };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+                if (supportedModes.Contains(ContentSelectionMode.ITEM))
+                {
+                    var command = new FlyoutCommand("Item", (cmd) => { Popup_CommandHandler_SelectModeItem(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Item", Command = command };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+                if (supportedModes.Contains(ContentSelectionMode.RESIZE))
+                {
+                    var command = new FlyoutCommand("Resize", (cmd) => { Popup_CommandHandler_SelectModeResize(cmd); });
+                    var flyoutItem = new MenuFlyoutItem { Text = "Resize", Command = command };
+                    flyoutSubItem.Items.Add(flyoutItem);
+                }
+            }
+
+            if (availableActions.HasFlag(AvailableActions.SELECTION_TYPE))
+            {
+                var supportedTypes = Editor.GetAvailableSelectionTypes(contentSelection);
+
+                var flyoutSubItem = new MenuFlyoutSubItem { Text = "Selection mode..." };
+                flyoutMenu.Items.Add(flyoutSubItem);
+
+                if (supportedTypes.Contains("Text"))
+                {
+                    {
+                        var command = new FlyoutCommand("Text", (cmd) => { Popup_CommandHandler_SelectTypeText(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Text", Command = command };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
+                    {
+                        var command = new FlyoutCommand("Text - Single Block", (cmd) => { Popup_CommandHandler_SelectTypeTextSingleBlock(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Text - Single Block", Command = command };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
+                }
+                if (supportedTypes.Contains("Math"))
+                {
+                    {
+                        var command = new FlyoutCommand("Math", (cmd) => { Popup_CommandHandler_SelectTypeMath(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Math", Command = command };
+                        flyoutSubItem.Items.Add(flyoutItem);
+                    }
+                    {
+                        var command = new FlyoutCommand("Math - Single Block", (cmd) => { Popup_CommandHandler_SelectTypeMathSingleBlock(cmd); });
+                        var flyoutItem = new MenuFlyoutItem { Text = "Math - Single Block", Command = command };
                         flyoutSubItem.Items.Add(flyoutItem);
                     }
                 }
@@ -1360,6 +1484,97 @@ namespace MyScript.IInk.Demo
             {
                 if (_lastContentSelection != null)
                     Editor.Indent(_lastContentSelection, -1);
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
+        }
+
+        private async void Popup_CommandHandler_SelectModeLasso(FlyoutCommand command)
+        {
+            try
+            {
+                Editor.SetSelectionMode(ContentSelectionMode.LASSO);
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
+        }
+
+        private async void Popup_CommandHandler_SelectModeItem(FlyoutCommand command)
+        {
+            try
+            {
+                Editor.SetSelectionMode(ContentSelectionMode.ITEM);
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
+        }
+
+        private async void Popup_CommandHandler_SelectModeResize(FlyoutCommand command)
+        {
+            try
+            {
+                Editor.SetSelectionMode(ContentSelectionMode.RESIZE);
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
+        }
+
+        private async void Popup_CommandHandler_SelectTypeText(FlyoutCommand command)
+        {
+            try
+            {
+                Editor.SetSelectionType(_lastContentSelection, "Text", false);
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
+        }
+
+        private async void Popup_CommandHandler_SelectTypeTextSingleBlock(FlyoutCommand command)
+        {
+            try
+            {
+                Editor.SetSelectionType(_lastContentSelection, "Text", true);
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
+        }
+
+        private async void Popup_CommandHandler_SelectTypeMath(FlyoutCommand command)
+        {
+            try
+            {
+                Editor.SetSelectionType(_lastContentSelection, "Math", false);
+            }
+            catch (Exception ex)
+            {
+                var msgDialog = new MessageDialog(ex.ToString());
+                await msgDialog.ShowAsync();
+            }
+        }
+
+        private async void Popup_CommandHandler_SelectTypeMathSingleBlock(FlyoutCommand command)
+        {
+            try
+            {
+                Editor.SetSelectionType(_lastContentSelection, "Math", true);
             }
             catch (Exception ex)
             {
