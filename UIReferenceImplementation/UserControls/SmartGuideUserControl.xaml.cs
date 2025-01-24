@@ -535,6 +535,11 @@ namespace MyScript.IInk.UIReferenceImplementation.UserControls
                     _activeBlock?.Dispose();
                     _activeBlock = newActiveBlock;
                 }
+                else
+                {
+                    Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+                    return;
+                }
             }
 
             if (_activeBlock != null)
