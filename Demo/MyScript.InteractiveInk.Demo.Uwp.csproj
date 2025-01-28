@@ -96,11 +96,17 @@
     <Content Include="..\recognition-assets\conf\raw-content.conf">
       <Link>conf\raw-content.conf</Link>
     </Content>
+    <Content Include="..\recognition-assets\conf\raw-content2.conf">
+      <Link>conf\raw-content2.conf</Link>
+    </Content>
     <Content Include="..\recognition-assets\conf\en_US.conf">
       <Link>conf\en_US.conf</Link>
     </Content>
     <Content Include="..\recognition-assets\conf\math.conf">
       <Link>conf\math.conf</Link>
+    </Content>
+    <Content Include="..\recognition-assets\conf\math2.conf">
+      <Link>conf\math2.conf</Link>
     </Content>
     <Content Include="..\fonts\MyScriptInter-Bold.otf">
       <Link>fonts\MyScriptInter-Bold.otf</Link>
@@ -120,6 +126,9 @@
     <Content Include="..\recognition-assets\resources\analyzer\ank-raw-content.res">
       <Link>resources\analyzer\ank-raw-content.res</Link>
     </Content>
+    <Content Include="..\recognition-assets\resources\document_layout\dl-raw-content.res">
+      <Link>resources\document_layout\dl-raw-content.res</Link>
+    </Content>
     <Content Include="..\recognition-assets\resources\en_US\en_US-ak-cur.res">
       <Link>resources\en_US\en_US-ak-cur.res</Link>
     </Content>
@@ -131,6 +140,9 @@
     </Content>
     <Content Include="..\recognition-assets\resources\math\math-grm-standard.res">
       <Link>resources\math\math-grm-standard.res</Link>
+    </Content>
+    <Content Include="..\recognition-assets\resources\math\math-sr.res">
+      <Link>resources\math\math-sr.res</Link>
     </Content>
     <Content Include="..\recognition-assets\resources\shape\shk-diagram.res">
       <Link>resources\shape\shk-diagram.res</Link>
