@@ -4,8 +4,10 @@ $destination = $shell_app.namespace("$PSScriptRoot")
 
 
 if (-not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\diagram.conf") -Or
-  -not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\raw-content.conf")    -Or
-  -not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\math.conf")    -Or
+  -not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\raw-content.conf") -Or
+  -not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\raw-content2.conf") -Or
+  -not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\math.conf") -Or
+  -not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\math2.conf") -Or
   -not[System.IO.File]::Exists("$PSScriptRoot\recognition-assets\conf\en_US.conf"))
 
   {
