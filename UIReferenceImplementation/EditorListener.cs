@@ -33,6 +33,11 @@ namespace MyScript.IInk.UIReferenceImplementation
             }
         }
 
+        public void ContentChanged2(Editor editor, string[] addedBlockIds, string[] removedBlockIds, string[] updatedBlockIds)
+        {
+            // Optional (only supported for "Raw Content" parts)
+        }
+
         public void SelectionChanged(Editor editor)
         {
             if (_ucEditor.SmartGuideEnabled && _ucEditor.SmartGuide != null)
