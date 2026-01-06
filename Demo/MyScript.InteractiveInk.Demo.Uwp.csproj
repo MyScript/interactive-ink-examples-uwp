@@ -102,6 +102,9 @@
     <Content Include="..\recognition-assets\conf\en_US.conf">
       <Link>conf\en_US.conf</Link>
     </Content>
+    <Content Include="..\recognition-assets\conf\mul_Latn.conf">
+      <Link>conf\mul_Latn.conf</Link>
+    </Content>
     <Content Include="..\recognition-assets\conf\math.conf">
       <Link>conf\math.conf</Link>
     </Content>
@@ -134,6 +137,9 @@
     </Content>
     <Content Include="..\recognition-assets\resources\en_US\en_US-lk-text.res">
       <Link>resources\en_US\en_US-lk-text.res</Link>
+    </Content>
+    <Content Include="..\recognition-assets\resources\handwriting_recognition\mul_Latn-text.res">
+      <Link>resources\handwriting_recognition\mul_Latn-text.res</Link>
     </Content>
     <Content Include="..\recognition-assets\resources\math\math-ak.res">
       <Link>resources\math\math-ak.res</Link>
